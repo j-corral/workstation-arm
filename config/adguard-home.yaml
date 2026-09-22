@@ -1,5 +1,7 @@
 # Managed initial state only. On reruns the installed configuration is preserved.
-schema_version: 25
+# v0.107.79 uses schema 34.  Without it, AdGuard attempts legacy migrations
+# and reads current nested settings (notably EDNS) with obsolete field types.
+schema_version: 34
 http:
   address: 127.0.0.1:3000
 users: [] # The web UI is bound to VM loopback only.
@@ -28,8 +30,12 @@ filtering:
 querylog:
   enabled: false
   file_enabled: false
+  ignored: []
+  ignored_enabled: false
 statistics:
   enabled: false
+  ignored: []
+  ignored_enabled: false
 filters:
 - enabled: true
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt

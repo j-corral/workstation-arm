@@ -16,6 +16,10 @@ Ubuntu 26.04 exposes `dnsutils` as a virtual package without an APT candidate.
 The network module therefore installs the concrete ARM64 `bind9-dnsutils`
 package, which supplies `dig` for the DNS checks.
 
+The AdGuard Home template uses the v0.107.79 current schema (34). This prevents
+AdGuard's legacy configuration migrations from decoding current nested DNS
+settings with obsolete types.
+
 ## Follow-up — 2026-09-22
 
 The user supplied a native Ubuntu 26.04 ARM64 installation transcript. Base
