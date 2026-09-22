@@ -70,7 +70,7 @@ set. This also happens with `--only`. Module order is fixed:
 | Module | Automatic work | Failure policy |
 | --- | --- | --- |
 | `system` | Build essentials, certificates, curl/wget, git/GPG, zip/unzip, lsof, vim, jq, rg, bat, fzf, btop, direnv, zsh, ncdu, SSH client | Required |
-| `kde` | `kde-plasma-desktop`, Wayland session, SDDM, Konsole, Dolphin, Plasma NetworkManager UI, KDE portal | Required |
+| `kde` | `kde-plasma-desktop`, Wayland session, SDDM, Konsole, Dolphin, Plasma NetworkManager UI, KDE portal; French PC keyboard and NumLock | Required |
 | `shell` | Zsh login shell, managed `.zshrc` section, direnv/mise/fzf hooks | Required |
 | `git` | Ubuntu git, OpenSSH client, gh, glab; secure `.ssh` directory/config | Required |
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
@@ -339,3 +339,25 @@ modules declare component actions, `lib` handles system operations/reporting,
 and Python helpers handle structured data and atomic text updates. Modules are
 internal, not standalone entry points. No framework or secret configuration is
 required.
+
+### French PC keyboard and NumLock
+
+The `kde` module installs `keyboard-configuration`, `console-setup` and
+`libkf6config-bin`. It sets `/etc/default/keyboard` to model `pc105`, layout `fr`
+and an empty variant (standard French AZERTY), preserving unrelated settings,
+then regenerates the console keymap cache without changing the active console.
+For the invoking user it sets Plasma's `kxkbrc` layout and `kcminputrc` NumLock
+preference. NumLock is enabled when the next Plasma session starts, including
+Wayland; no `numlockx` autostart is needed.
+
+After updating the repository in the guest, run `./bootstrap.sh --only kde`,
+then reboot and select Plasma. The same configuration is included in a full run.
+Existing GNOME input-source preferences are separate and are not configured.
+SDDM gets `/etc/sddm.conf.d/90-workstation-keyboard.conf` with `Numlock=on` for
+its X11 greeter. A Wayland greeter needs compositor-specific configuration;
+`/etc/sddm.conf` or a later drop-in may override this setting. The script does
+not switch or restart the active display manager.
+
+References: [Plasma keyboard schema](https://raw.githubusercontent.com/KDE/plasma-desktop/Plasma/6.6/kcms/keyboard/keyboardsettings.kcfg),
+[KWin NumLock handling](https://raw.githubusercontent.com/KDE/kwin/Plasma/6.6/src/xkb.cpp),
+[SDDM configuration](https://github.com/sddm/sddm/blob/develop/data/man/sddm.conf.rst.in).

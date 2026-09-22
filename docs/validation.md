@@ -74,3 +74,13 @@ Guest acceptance procedure:
    test all VPN paths and complete the manual checklist. LM Link remains blocked
    until an official model-free bootstrap is verified.
 7. Capture an approved post-bootstrap snapshot; do not commit enrollment data.
+
+## French keyboard follow-up — 2026-09-22
+
+The KDE module now configures system and user Plasma French PC AZERTY defaults
+and Plasma startup NumLock, plus the SDDM X11 greeter Numlock preference.
+`bash tests/run.sh` passes Bash syntax checks, ShellCheck and 13 offline tests.
+New tests cover preservation of unrelated system keyboard settings and file
+mode, duplicate-key removal, missing keys, idempotency and symlink refusal.
+No guest execution was available: console cache generation, Plasma startup,
+physical keypad behavior and SDDM must still be checked after a VM reboot.
