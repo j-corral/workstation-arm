@@ -5,8 +5,18 @@ mode=${1:-}
 root=${2:-}
 binary=${3:-}
 backup=${2:-}
-files=(/etc/resolv.conf /etc/systemd/resolved.conf.d/60-workstation-quad9.conf /etc/systemd/resolved.conf.d/70-workstation-adguard.conf /etc/workstation-adguard/AdGuardHome.yaml /etc/systemd/system/AdGuardHome.service /opt/workstation-adguard/AdGuardHome /etc/docker/daemon.json)
+files=(/etc/resolv.conf /etc/systemd/resolved.conf.d/60-workstation-quad9.conf /etc/systemd/resolved.conf.d/70-workstation-adguard.conf /etc/workstation-adguard/AdGuardHome.yaml /etc/systemd/system/AdGuardHome.service /opt/workstation-adguard/AdGuardHome /etc/docker/daemon.json /etc/NetworkManager/dispatcher.d/90-workstation-resolved-default-route)
 report() { printf '%s\n' "$*" >&2; }
+restore_networkmanager_dns() {
+    [[ -f $backup/networkmanager.connection ]] || return 0
+    local connection ipv4 ipv6 device
+    connection=$(cat "$backup/networkmanager.connection")
+    ipv4=$(cat "$backup/networkmanager.ipv4-ignore-auto-dns")
+    ipv6=$(cat "$backup/networkmanager.ipv6-ignore-auto-dns")
+    device=$(cat "$backup/networkmanager.device")
+    nmcli connection modify "$connection" ipv4.ignore-auto-dns "$ipv4" ipv6.ignore-auto-dns "$ipv6"
+    nmcli connection up "$connection" ifname "$device" >/dev/null
+}
 restore() {
     local index=0 path
     [[ -d $backup && -f $backup/manifest ]] || { report 'Backup manifest missing.'; return 1; }
@@ -29,6 +39,7 @@ restore() {
     done < "$backup/manifest"
     systemctl daemon-reload
     systemctl restart systemd-resolved.service
+    restore_networkmanager_dns || report 'Could not restore NetworkManager DNS settings automatically.'
     if [[ -f $backup/adguard.enabled ]]; then systemctl enable AdGuardHome.service; else systemctl disable AdGuardHome.service 2>/dev/null || true; fi
     if [[ -f $backup/adguard.active ]]; then systemctl start AdGuardHome.service; fi
     if [[ -f $backup/docker.active ]]; then systemctl restart docker.service; fi
@@ -43,7 +54,7 @@ source /etc/os-release
 command -v dig >/dev/null && command -v ss >/dev/null && command -v ip >/dev/null
 systemctl is-active --quiet systemd-resolved.service || { report 'systemd-resolved must be active.'; exit 1; }
 [[ -L /etc/resolv.conf && $(readlink -f /etc/resolv.conf) == /run/systemd/resolve/stub-resolv.conf ]] || { report 'Unexpected /etc/resolv.conf; expected systemd-resolved stub symlink. No changes made.'; exit 1; }
-for path in /etc/systemd/resolved.conf.d/60-workstation-quad9.conf /etc/systemd/resolved.conf.d/70-workstation-adguard.conf /etc/workstation-adguard/AdGuardHome.yaml /etc/systemd/system/AdGuardHome.service /opt/workstation-adguard/AdGuardHome /etc/docker/daemon.json; do
+for path in /etc/systemd/resolved.conf.d/60-workstation-quad9.conf /etc/systemd/resolved.conf.d/70-workstation-adguard.conf /etc/workstation-adguard/AdGuardHome.yaml /etc/systemd/system/AdGuardHome.service /opt/workstation-adguard/AdGuardHome /etc/docker/daemon.json /etc/NetworkManager/dispatcher.d/90-workstation-resolved-default-route; do
     [[ ! -L $path ]] || { report "Refusing symlinked managed path: $path"; exit 1; }
 done
 if [[ -e /etc/systemd/resolved.conf.d/60-workstation-quad9.conf ]] && ! cmp -s "$root/config/quad9-resolved.conf" /etc/systemd/resolved.conf.d/60-workstation-quad9.conf; then report 'Existing Quad9 config differs; reconcile manually.'; exit 1; fi
@@ -58,6 +69,16 @@ if [[ -n $listener ]] && grep -v 'systemd-resolv\|AdGuardHome' <<< "$listener" |
 report "Preflight: $(uname -m), Ubuntu $VERSION_ID; resolved active; resolv.conf -> $(readlink /etc/resolv.conf)"
 report "Port 53: ${listener:-none}; NetworkManager: $(systemctl is-active NetworkManager.service 2>/dev/null || true)"
 report "Interfaces: $(ip -br link | tr '\n' ' ')"
+systemctl is-active --quiet NetworkManager.service || { report 'NetworkManager must be active to prevent DHCP DNS bypassing the local resolver.'; exit 1; }
+command -v nmcli >/dev/null || { report 'nmcli is required to prevent DHCP DNS bypassing the local resolver.'; exit 1; }
+nm_device=$(ip -4 route show default | awk 'NR==1 {print $5}')
+[[ -n $nm_device ]] || { report 'No IPv4 default-route interface found; refusing to guess which DHCP DNS settings to change.'; exit 1; }
+[[ $nm_device =~ ^[a-zA-Z0-9_.-]+$ ]] || { report "Unsafe NetworkManager interface name: $nm_device"; exit 1; }
+nm_connection=$(nmcli -g GENERAL.CONNECTION device show "$nm_device")
+[[ -n $nm_connection && $nm_connection != -- ]] || { report "No active NetworkManager connection for $nm_device; refusing to guess which DHCP DNS settings to change."; exit 1; }
+nm_type=$(nmcli -g GENERAL.TYPE device show "$nm_device")
+[[ $nm_type == ethernet || $nm_type == wifi ]] || { report "Default-route interface $nm_device is $nm_type; only an active Ethernet or Wi-Fi uplink may have DHCP DNS disabled."; exit 1; }
+report "NetworkManager uplink: $nm_device ($nm_connection); DHCP DNS will be disabled on this profile."
 docker_active=0
 gateway=''
 if systemctl is-active --quiet docker.service; then
@@ -90,6 +111,10 @@ done
 if systemctl is-active --quiet AdGuardHome.service; then : > "$backup/adguard.active"; fi
 if systemctl is-enabled --quiet AdGuardHome.service; then : > "$backup/adguard.enabled"; fi
 if (( docker_active )); then : > "$backup/docker.active"; fi
+printf '%s\n' "$nm_connection" > "$backup/networkmanager.connection"
+nmcli -g ipv4.ignore-auto-dns connection show "$nm_connection" > "$backup/networkmanager.ipv4-ignore-auto-dns"
+nmcli -g ipv6.ignore-auto-dns connection show "$nm_connection" > "$backup/networkmanager.ipv6-ignore-auto-dns"
+printf '%s\n' "$nm_device" > "$backup/networkmanager.device"
 committed=0
 on_exit() { local rc=$?; if (( ! committed )); then report 'Install failed; restoring saved DNS state.'; restore || true; fi; exit "$rc"; }
 trap on_exit EXIT
@@ -118,6 +143,16 @@ install -m 0644 "$root/config/adguard-home.service" /etc/systemd/system/AdGuardH
 install -d -m 0755 /etc/systemd/resolved.conf.d
 rm -f /etc/systemd/resolved.conf.d/60-workstation-quad9.conf
 install -m 0644 "$root/config/adguard-resolved.conf" /etc/systemd/resolved.conf.d/70-workstation-adguard.conf
+install -d -m 0755 /etc/NetworkManager/dispatcher.d
+install -m 0755 "$root/config/networkmanager-workstation-dns-dispatcher" /etc/NetworkManager/dispatcher.d/90-workstation-resolved-default-route
+sed -i "s/@UPLINK@/$nm_device/g" /etc/NetworkManager/dispatcher.d/90-workstation-resolved-default-route
+nmcli connection modify "$nm_connection" ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes
+nmcli connection up "$nm_connection" ifname "$nm_device" >/dev/null
+resolvectl default-route "$nm_device" no
+if ! resolvectl default-route "$nm_device" | grep -Eq ': no$'; then
+    report "Could not disable the default DNS route on $nm_device."
+    exit 1
+fi
 if (( docker_active )); then
     install -d -m 0755 /etc/docker
     python3 - /etc/docker/daemon.json "$gateway" <<'PY'

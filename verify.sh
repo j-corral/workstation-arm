@@ -109,17 +109,16 @@ command_check optional Konsole konsole
 command_check optional 'Foot (Wayland alternative)' foot
 command_check optional KeePassXC keepassxc
 package_check 'KWallet Manager' kwalletmanager
-command_check optional Obsidian workstation-obsidian
+if command -v flatpak >/dev/null && flatpak info --user md.obsidian.Obsidian >/dev/null 2>&1 && [[ $(flatpak info --user --show-ref md.obsidian.Obsidian) == app/md.obsidian.Obsidian/aarch64/stable ]]; then
+    ok Obsidian 'aarch64 Flatpak installed; GUI/vault access not tested'
+else warn Obsidian 'aarch64 Flatpak not installed for this user'; fi
 package_check ONLYOFFICE onlyoffice-desktopeditors
 package_check Solaar solaar
 if command -v flatpak >/dev/null && flatpak info --user com.bitwarden.desktop >/dev/null 2>&1; then
-    bitwarden_arch=$(flatpak info --user --show-arch com.bitwarden.desktop)
-    if [[ $bitwarden_arch == aarch64 ]]; then ok Bitwarden 'aarch64 Flatpak installed; GUI/login not tested';
-    else bad Bitwarden "foreign Flatpak architecture: $bitwarden_arch"; fi
+    bitwarden_ref=$(flatpak info --user --show-ref com.bitwarden.desktop)
+    if [[ $bitwarden_ref == app/com.bitwarden.desktop/aarch64/stable ]]; then ok Bitwarden 'aarch64 Flatpak installed; GUI/login not tested';
+    else bad Bitwarden "unexpected Flatpak ref: $bitwarden_ref"; fi
 else warn Bitwarden 'aarch64 Flatpak not installed for this user'; fi
-if [[ -f $HOME/.local/share/applications/workstation-spotify-web.desktop ]]; then
-    ok 'Spotify Web' 'application launcher present; browser/playback not tested'
-else warn 'Spotify Web' 'application launcher absent'; fi
 manual 'Logitech devices' 'Attach receiver to the guest or pair over Bluetooth, then run solaar show.'
 package_check 'Proton Mail (automatic ARM64 install unsupported)' proton-mail
 section NETWORK
@@ -135,6 +134,7 @@ if [[ -f /etc/systemd/resolved.conf.d/60-workstation-quad9.conf ]]; then
     else bad 'Quad9 Secure DoT' 'managed resolver configuration differs from repository'; fi
 else warn 'Quad9 Secure DoT' 'not configured'; fi
 fi
+if [[ -f $HOME/.local/share/applications/workstation-adguard-home.desktop ]]; then ok 'AdGuard Home launcher' 'opens loopback-only dashboard'; else warn 'AdGuard Home launcher' 'absent'; fi
 if (( quad9 )); then
     if command -v resolvectl >/dev/null && timeout 15 resolvectl query -t TXT proto.on.quad9.net 2>/dev/null | grep -Eq '(^|[^a-z])dot\.'; then
         ok 'Quad9 live protocol' 'Quad9 reports DNS-over-TLS'

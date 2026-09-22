@@ -9,7 +9,6 @@ Post-install manual checklist (only for applicable installed components):
 [ ] Open local DOCX, XLSX and PPTX files in ONLYOFFICE
 [ ] Attach Logitech receiver to guest or pair with Bluetooth; run solaar show
 [ ] Open Bitwarden from Plasma and sign in; confirm the vault unlocks
-[ ] Open Spotify (Web) from Plasma, sign in and test browser playback
 [ ] Generate a dedicated passphrase-protected client SSH key
 [ ] Set client-specific Git identity; gh auth login; glab auth login
 [ ] Open Toolbox, authenticate JetBrains and select needed IDEs

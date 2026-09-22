@@ -48,13 +48,6 @@
     "digest": "bda69398c266353452911cbac87b86ef5c6de8f2efd0f5c234d88afaf1e11363",
     "evidence": "https://api.github.com/repos/usebruno/bruno/releases/tags/v4.1.0"
   },
-  "obsidian": {
-    "version": "v1.13.7",
-    "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.7/Obsidian-1.13.7-arm64.AppImage",
-    "algorithm": "sha256",
-    "digest": "e286fd2bb2a5d346a35a577bd764c73fd5537dddec2b99a1a3e5e35974085203",
-    "evidence": "https://api.github.com/repos/obsidianmd/obsidian-releases/releases/tags/v1.13.7"
-  },
   "toolbox": {
     "version": "3.8.1.88030",
     "url": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.8.1.88030-arm64.tar.gz",

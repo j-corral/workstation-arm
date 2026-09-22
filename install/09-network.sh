@@ -15,6 +15,20 @@ quad9_dot_install() {
     extract_archive "$WS_TMP/adguard.tar.gz" "$WS_TMP/adguard"
     elf_arm64 "$WS_TMP/adguard/AdGuardHome/AdGuardHome"
     sudo bash "$WS_ROOT/tools/install_local_dns.sh" install "$WS_ROOT" "$WS_TMP/adguard/AdGuardHome/AdGuardHome"
+    local directory="$HOME/.local/share/applications" launcher="$HOME/.local/share/applications/workstation-adguard-home.desktop"
+    install -d -m 0755 "$directory"
+    [[ ! -L $launcher ]] || { fail 'Refusing symlinked AdGuard Home launcher.'; return 1; }
+    cat > "$WS_TMP/adguard-home.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=AdGuard Home (local)
+Comment=Local DNS filtering dashboard
+Exec=xdg-open http://127.0.0.1:3000/
+Icon=network-server
+Terminal=false
+Categories=Settings;Network;
+EOF
+    install -m 0644 "$WS_TMP/adguard-home.desktop" "$launcher"
     manual 'VPN and browser DNS' 'Confirm client VPN split domains after connection. Disable third-party browser Secure DNS/DoH if it bypasses the system resolver.'
 }
 main() {

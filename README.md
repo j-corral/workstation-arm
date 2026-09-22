@@ -76,7 +76,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar, Bitwarden Flatpak ARM64, Spotify Web shortcut | Optional; Proton Mail skipped |
+| `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar and Bitwarden Flatpak ARM64 | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
@@ -344,12 +344,9 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   dark translucent palette; start it with `foot`. The desktop module does not
   install Ghostty. An older Ghostty installation remains until removed by the
   user; its command will still fail on a virtual GPU below OpenGL 4.3.
-- Obsidian's desktop launcher now uses the extracted, pinned ARM64 AppImage to
-  avoid FUSE, installs Ubuntu's ARM64 `zlib1g-dev` for the upstream `libz.so`
-  dependency, and disables Electron GPU acceleration in a VM. If the previous
-  `~/.local/bin/obsidian` matches the bootstrap's pinned AppImage, it is kept
-  as a backup and the command is redirected to the new launcher. Its GUI still
-  needs a live check. If Obsidian or Bruno hits an AppArmor/Electron sandbox
+- Obsidian uses the official-team-verified aarch64 Flatpak, which supplies its
+  own icon and updates. If Parallels rendering is unstable, disable its GPU in
+  Flatseal. If Obsidian or Bruno hits an AppArmor/Electron sandbox
   restriction, use vendor/IT guidance
   for a scoped policy; do not disable AppArmor or pass `--no-sandbox` globally.
 - If Plasma opens KWallet with “no keys suitable for encryption,” the GPG wallet
@@ -369,8 +366,7 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   reviewing the proposed transaction. Review autoremove separately. Remove its
   `workstation-*.list` and key only when no remaining package needs that feed.
 - User tools installed here live under `~/.local/bin`; Zed also uses
-  `~/.local/zed.app`, Toolbox `~/.local/share/workstation-toolbox`, and Obsidian
-  `~/.local/share/workstation-obsidian`. Remove only
+  `~/.local/zed.app` and Toolbox `~/.local/share/workstation-toolbox`. Remove only
   the intended payload/symlink and its `workstation-*.desktop` launcher, after
   checking for user updates/data. Keep projects and app settings unless you
   explicitly intend to erase them. Remove only the delimited workstation block

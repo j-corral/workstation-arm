@@ -55,3 +55,16 @@ class LocalDnsTests(unittest.TestCase):
     def test_adguard_config_directory_is_service_writable(self):
         installer = (ROOT / 'tools/install_local_dns.sh').read_text()
         self.assertIn('install -d -m 0750 -o workstation-adguard -g workstation-adguard /etc/workstation-adguard', installer)
+
+    def test_networkmanager_dhcp_dns_is_not_a_default_route_and_rollback_restores_it(self):
+        installer = (ROOT / 'tools/install_local_dns.sh').read_text()
+        self.assertIn('ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes', installer)
+        self.assertIn('restore_networkmanager_dns', installer)
+        self.assertIn('resolvectl default-route "$nm_device" no', installer)
+        dispatcher = (ROOT / 'config/networkmanager-workstation-dns-dispatcher').read_text()
+        self.assertIn("'@UPLINK@'", dispatcher)
+
+    def test_desktop_arm64_compatibility_checks_use_supported_interfaces(self):
+        desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
+        self.assertIn('--show-ref com.bitwarden.desktop', desktop)
+        self.assertIn('--show-ref md.obsidian.Obsidian', desktop)

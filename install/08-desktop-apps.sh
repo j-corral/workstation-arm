@@ -68,27 +68,9 @@ bitwarden_install() {
     need_commands flatpak
     flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub com.bitwarden.desktop
-    [[ $(flatpak info --user --show-arch com.bitwarden.desktop) == aarch64 ]] || { fail 'Bitwarden Flatpak is not aarch64.'; return 1; }
+    # --show-arch is not available in Flatpak 1.16 shipped by Ubuntu 26.04.
+    flatpak info --user --show-ref com.bitwarden.desktop | grep -Fxq 'app/com.bitwarden.desktop/aarch64/stable' || { fail 'Bitwarden Flatpak is not aarch64.'; return 1; }
     manual Bitwarden 'Open the desktop app and sign in interactively; no vault credentials are handled by bootstrap.'
-}
-spotify_web_install() {
-    apt_install xdg-utils
-    need_commands xdg-open
-    local directory="$HOME/.local/share/applications" shortcut="$HOME/.local/share/applications/workstation-spotify-web.desktop"
-    install -d -m 0755 "$directory"
-    [[ ! -L $shortcut ]] || { fail 'Refusing symlink Spotify shortcut.'; return 1; }
-    cat > "$WS_TMP/spotify-web.desktop" <<'EOF'
-[Desktop Entry]
-Type=Application
-Name=Spotify (Web)
-Comment=Spotify web player in the default browser
-Exec=xdg-open https://open.spotify.com/
-Icon=multimedia-player
-Terminal=false
-Categories=Audio;AudioVideo;Network;
-EOF
-    install -m 0644 "$WS_TMP/spotify-web.desktop" "$shortcut"
-    manual Spotify 'Open Spotify (Web) from the application menu and sign in. Native Spotify Linux packages reviewed do not provide ARM64.'
 }
 keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
 kwallet_install() {
@@ -96,54 +78,25 @@ kwallet_install() {
     manual KWallet 'On first prompt, choose Classic (Blowfish encrypted file) and set a private wallet password. GPG mode requires an existing encryption-capable GPG key; bootstrap does not create one or store a password.'
 }
 obsidian_install() {
-    # The upstream ARM64 AppImage asks for the unversioned libz.so at load time.
-    # Ubuntu provides it in zlib1g-dev; zlib1g alone provides only libz.so.1.
-    apt_install zlib1g-dev
-    local image="$WS_TMP/Obsidian.AppImage" destination="$HOME/.local/share/workstation-obsidian" launcher="$HOME/.local/bin/workstation-obsidian" old="$HOME/.local/bin/obsidian" digest
-    if [[ -x $destination/AppRun ]]; then
-        :
-    else
-        locked_download obsidian "$image"
-        elf_arm64 "$image"
-        # Extraction uses the checksum-locked upstream AppImage and avoids FUSE at startup.
-        (cd "$WS_TMP" && "$image" --appimage-extract >/dev/null)
-        [[ -x $WS_TMP/squashfs-root/AppRun ]] || { fail 'Obsidian AppImage extraction did not produce AppRun.'; return 1; }
-        [[ ! -e $destination ]] || { fail 'Existing Obsidian payload needs reconciliation.'; return 1; }
-        install -d -m 0755 "$HOME/.local/share" "$HOME/.local/bin"
-        mv "$WS_TMP/squashfs-root" "$destination"
-    fi
-    cat > "$launcher" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-app="$HOME/.local/share/workstation-obsidian/AppRun"
-if command -v systemd-detect-virt >/dev/null && systemd-detect-virt --vm --quiet; then
-    exec "$app" --disable-gpu "$@"
-fi
-exec "$app" "$@"
-EOF
-    chmod 0755 "$launcher"
-    digest=$(python3 "$WS_ROOT/tools/artifacts.py" lookup "$WS_ROOT/config/downloads.json" obsidian | cut -f3)
-    if [[ -f $old && ! -L $old ]] && printf '%s  %s\n' "$digest" "$old" | sha256sum --check --status; then
-        [[ ! -e $destination/source.AppImage ]] || { fail 'Obsidian source backup already exists; reconcile manually.'; return 1; }
-        mv "$old" "$destination/source.AppImage"
-        ln -s "$launcher" "$old"
-    elif [[ ! -e $old && ! -L $old ]]; then
-        ln -s "$launcher" "$old"
-    elif [[ ! -L $old || $(readlink "$old") != "$launcher" ]]; then
-        manual Obsidian "Existing $old is not the bootstrap's pinned AppImage; it was retained. Use $launcher."
-    fi
-    python3 "$WS_ROOT/tools/desktop_entry.py" obsidian Obsidian "$launcher"
-    manual Obsidian 'ARM64 libz.so supplied, AppImage extracted to avoid FUSE, and VM launcher disables Electron GPU. GUI compatibility still requires a live launch. Existing vaults are untouched.'
+    apt_install flatpak
+    need_commands flatpak
+    flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub md.obsidian.Obsidian
+    flatpak info --user --show-ref md.obsidian.Obsidian | grep -Fxq 'app/md.obsidian.Obsidian/aarch64/stable' || { fail 'Obsidian Flatpak is not aarch64.'; return 1; }
+    # Replace only the old launcher this bootstrap created; do not touch vaults
+    # or the extracted AppImage payload, which may be useful for rollback.
+    local legacy="$HOME/.local/share/applications/workstation-obsidian.desktop"
+    if [[ -f $legacy ]] && grep -Fq "$HOME/.local/bin/workstation-obsidian" "$legacy"; then rm -f -- "$legacy"; fi
+    manual Obsidian 'Official verified aarch64 Flatpak installed. Log out/in if its icon is not yet visible; disable GPU in Flatseal if Parallels rendering is unstable. Existing vaults are untouched.'
 }
 main() {
     component optional 'Konsole translucent terminal' konsole_install 'Default KDE terminal with a user-owned translucent profile.'
     component optional 'Foot terminal' foot_install 'Optional native ARM64 Wayland terminal with translucent color theme; Konsole remains default.'
     component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
     component optional 'KWallet Manager' kwallet_install 'Manage Plasma secrets interactively; no automatic wallet/password creation.'
-    component optional Obsidian obsidian_install 'Extract pinned official ARM64 AppImage; use software rendering in a VM.'
+    component optional Obsidian obsidian_install 'Official verified ARM64 Flatpak; existing vaults remain untouched.'
     component optional ONLYOFFICE onlyoffice_install 'Official signed APT source, native ARM64 package, local Office files.'
     component optional Solaar solaar_install 'Native ARM64 Ubuntu package for supported Logitech HID++ devices.'
     component optional Bitwarden bitwarden_install 'Official Bitwarden Flatpak on Flathub for aarch64; account login remains interactive.'
-    component optional 'Spotify Web' spotify_web_install 'Create a Spotify web-player launcher; no supported native ARM64 desktop package verified.'
     manual 'Proton Mail' 'Unsupported for automatic ARM64 installation: official Linux .deb inspected is amd64 (1.14.0). Use the web app manually.'
 }
