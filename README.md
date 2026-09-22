@@ -377,13 +377,25 @@ work and reboot. Do not restart SDDM from an active desktop: it ends that sessio
 ### MacTahoe and Breeze recovery
 
 The KDE module installs the light variant from
-[MacTahoe-kde](https://github.com/vinceliuice/MacTahoe-kde), pinned to commit
-`cbf6a1f71b591d143184855d62f6272ce533e7c3` in `config/downloads.json` with a verified
-SHA-256. Only static assets are copied; upstream installers are not executed.
-The Plasma style, color scheme and window decorations are applied for the invoking
-user, and the Plasma 6 SDDM theme is selected system-wide. Panel layout stays as
-configured. Application widgets and icons use Breeze; separate MacTahoe icon,
-cursor and Kvantum projects are not downloaded. Reboot to apply all changes.
+[MacTahoe-kde](https://github.com/vinceliuice/MacTahoe-kde) at pinned commit
+`cbf6a1f71b591d143184855d62f6272ce533e7c3`, plus the author's
+[MacTahoe icon and cursor theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
+at pinned commit `839848b9a8a38a92a6936e30c4abe35cc6f2546d`. Both archives have verified
+SHA-256 locks. The script installs the upstream light global theme, Plasma
+style, color scheme, window decorations, wallpapers, Kvantum application
+style, matching icons/cursors and the Plasma 6 SDDM theme. It runs the pinned
+icon installer only against a private staging directory; theme assets are then
+copied after link validation. No upstream installer runs as root.
+
+The first KDE login applies the upstream top bar and bottom dock layout and
+MacTahoe wallpaper. When the bootstrap is run from a live Plasma session, it
+applies during that run. If run from GNOME, a KDE-only autostart entry applies
+it at the first Plasma login. Before replacing the panel layout, the script
+backs up `plasma-org.kde.plasma.desktop-appletsrc` under
+`~/.local/state/workstation/theme-backup/`. A marker prevents later bootstrap
+runs from resetting customized panels. Log out and back in for all application
+styles to take effect. The theme author's optional third-party blur extension
+is not installed; the desktop may therefore differ in blur from the preview.
 
 The base KDE step selects Breeze first. If the optional MacTahoe download or
 asset preparation fails, Breeze remains the login theme and the failure appears
@@ -403,7 +415,7 @@ as your normal user and then log out/in:
 plasma-apply-lookandfeel -a org.kde.breeze.desktop
 ```
 
-A KDE-module rerun selects MacTahoe again. French PC keyboard settings are
+A KDE-module rerun selects MacTahoe again without resetting the panels. French PC keyboard settings are
 independent of the theme: `/etc/default/keyboard`, the Xorg InputClass for SDDM,
 and the user's `kxkbrc` are all configured with `fr` and `pc105`; NumLock is set
 for SDDM and the next Plasma session. The installer reads back the Plasma keys.

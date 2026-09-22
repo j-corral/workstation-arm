@@ -120,3 +120,28 @@ French keyboard configuration is independent of the theme, with Plasma readback
 checks added. Local asset tests cover repeat installs, preservation of Breeze
 and refusal of payload/destination symlinks. Guest QML rendering, colorscheme
 activation and the login keyboard still require actual VM validation.
+
+## Complete MacTahoe desktop — 2026-09-22
+
+The user's VM confirmed the earlier SDDM MacTahoe login screen rendered well,
+while the desktop looked only slightly changed. Review of the pinned upstream
+README and assets showed that our earlier integration omitted its global theme,
+Kvantum configuration, wallpaper, separate icon/cursor project and the panel
+layout in `contents/layouts/org.kde.plasma.desktop-layout.js`. The bootstrap now
+installs these assets, applies the upstream top-panel/dock layout once in a
+Plasma session, and backs up prior panel configuration. A KDE-only autostart
+handles first boot when installation ran from GNOME. The additional icon archive
+was fetched and SHA-256 verified (`00cb36a3883e40687ade9f57a0c1dd3e14fda84b73efc69aa86e2be67f32ab0a`).
+Source: https://github.com/vinceliuice/MacTahoe-kde and
+https://github.com/vinceliuice/MacTahoe-icon-theme. Static staging of the KDE
+assets succeeded locally; complete icon generation and live Plasma application
+require the Ubuntu guest. KDE's `plasma-apply-lookandfeel --resetLayout` is
+required to apply the supplied panel layout.
+
+Local validation: `bash tests/run.sh` passed Bash syntax checking, ShellCheck
+and 21 offline tests. New tests verify first-login layout backup/idempotency,
+GNOME exclusion, icon-theme repeat installation, preservation of Breeze and
+rejection of an escaping icon symlink. The pinned KDE archive was staged with
+`tools/theme_assets.py` locally. The icon build script uses GNU userland and
+has not been executed in the Ubuntu guest yet; the user must validate the
+result of `./bootstrap.sh --only kde` in Plasma.

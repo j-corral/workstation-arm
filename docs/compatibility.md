@@ -72,7 +72,10 @@ On the target, APT performs signature validation and the installer checks native
 package architecture. No claim is made that a source package name alone proves
 application usability or exact-distribution vendor support.
 
-MacTahoe adds an architecture-independent static asset archive pinned to commit
-`cbf6a1f71b591d143184855d62f6272ce533e7c3`. Its SHA-256 was checked against the
-actual downloaded bytes. Plasma 6/Qt 6 assets are used; live SDDM rendering on
-Ubuntu ARM64 remains unverified. Breeze is retained for manual recovery.
+MacTahoe adds two architecture-independent pinned archives: the KDE theme at
+`cbf6a1f71b591d143184855d62f6272ce533e7c3` and the icon/cursor theme at
+`839848b9a8a38a92a6936e30c4abe35cc6f2546d`. Both SHA-256 digests were checked
+against downloaded bytes. Plasma 6/Qt 6 assets are used. The user confirmed
+that the earlier MacTahoe SDDM screen renders correctly on Ubuntu ARM64; the
+expanded desktop layout, icons, cursor and Kvantum integration still need
+guest validation. Breeze is retained for manual recovery.

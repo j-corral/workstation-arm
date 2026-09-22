@@ -82,23 +82,42 @@ main() {
 }
 
 mactahoe_install() {
-    local source share
-    apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support
+    local source icons_source share icon_share config_dir
+    apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support qt-style-kvantum libgtk-3-bin
+    need_commands plasma-apply-lookandfeel kvantummanager gtk-update-icon-cache
     locked_download mactahoe "$WS_TMP/mactahoe.tar.gz"
+    locked_download mactahoe_icons "$WS_TMP/mactahoe-icons.tar.gz"
     extract_archive "$WS_TMP/mactahoe.tar.gz" "$WS_TMP/theme"
+    extract_archive "$WS_TMP/mactahoe-icons.tar.gz" "$WS_TMP/icon-theme"
     source="$WS_TMP/theme/MacTahoe-kde-cbf6a1f71b591d143184855d62f6272ce533e7c3"
+    icons_source="$WS_TMP/icon-theme/MacTahoe-icon-theme-839848b9a8a38a92a6936e30c4abe35cc6f2546d"
     share=${XDG_DATA_HOME:-$HOME/.local/share}
-    python3 "$WS_ROOT/tools/theme_assets.py" prepare "$source" "$share" "$WS_TMP/greeter"
+    icon_share="$share/icons"
+    config_dir=${XDG_CONFIG_HOME:-$HOME/.config}
+    python3 "$WS_ROOT/tools/theme_assets.py" prepare "$source" "$share" "$WS_TMP/greeter" "$config_dir"
+    # The pinned upstream installer builds the icon/cursor links in private
+    # staging only; our helper validates them before replacing managed themes.
+    bash "$icons_source/install.sh" --dest "$WS_TMP/icons"
+    python3 "$WS_ROOT/tools/theme_assets.py" icons "$WS_TMP/icons" "$icon_share"
     sudo python3 "$WS_ROOT/tools/theme_assets.py" copy "$WS_TMP/greeter" /usr/share/sddm/themes/MacTahoe
-    # Set only installed components, preserving layout and keyboard preferences.
+    [[ -f $share/plasma/look-and-feel/com.github.vinceliuice.MacTahoe-Light/contents/layouts/org.kde.plasma.desktop-layout.js ]]
+    [[ -f $icon_share/MacTahoe-light/index.theme ]]
+    [[ -f $config_dir/Kvantum/MacTahoe/MacTahoe.kvconfig ]]
     kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light
     QT_QPA_PLATFORM=offscreen plasma-apply-colorscheme MacTahoeLight
-    kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Breeze
-    kwriteconfig6 --file kdeglobals --group Icons --key Theme breeze
+    kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
+    kwriteconfig6 --file kdeglobals --group Icons --key Theme MacTahoe-light
+    kwriteconfig6 --file kcminputrc --group Mouse --key cursorTheme MacTahoe-light
+    kwriteconfig6 --file Kvantum/kvantum.kvconfig --group General --key theme MacTahoe
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__MacTahoe-Light
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XAI
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ''
+    install -d -m 0700 "$HOME/.local/bin" "$config_dir/autostart"
+    install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" "$HOME/.local/bin/workstation-mactahoe-apply"
+    sed "s|Exec=PLACEHOLDER|Exec=$HOME/.local/bin/workstation-mactahoe-apply|" "$WS_ROOT/config/mactahoe-first-login.desktop" > "$WS_TMP/mactahoe.desktop"
+    install -m 0644 "$WS_TMP/mactahoe.desktop" "$config_dir/autostart/workstation-mactahoe.desktop"
+    "$HOME/.local/bin/workstation-mactahoe-apply"
     # Activate last: a download or staging failure leaves the installed Breeze greeter.
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current MacTahoe
     manual MacTahoe 'Reboot to apply. Breeze remains installed. For login-theme recovery: sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze, then reboot. Runtime theme failures do not automatically switch to Breeze.'

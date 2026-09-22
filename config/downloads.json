@@ -62,5 +62,13 @@
     "algorithm": "sha256",
     "digest": "b8b427a036438100faeaf2204cde3e5b4e09efc1a06e7b620a072167bd6b4256",
     "evidence": "https://github.com/vinceliuice/MacTahoe-kde/commit/cbf6a1f71b591d143184855d62f6272ce533e7c3"
+  },
+  "mactahoe_icons": {
+    "version": "839848b9a8a38a92a6936e30c4abe35cc6f2546d",
+    "architecture": "all",
+    "url": "https://codeload.github.com/vinceliuice/MacTahoe-icon-theme/tar.gz/839848b9a8a38a92a6936e30c4abe35cc6f2546d",
+    "algorithm": "sha256",
+    "digest": "00cb36a3883e40687ade9f57a0c1dd3e14fda84b73efc69aa86e2be67f32ab0a",
+    "evidence": "https://github.com/vinceliuice/MacTahoe-icon-theme/commit/839848b9a8a38a92a6936e30c4abe35cc6f2546d"
   }
 }
