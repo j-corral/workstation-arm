@@ -107,7 +107,7 @@ printf 'SHOULD_NOT_CONTINUE'
                 script.write_text('#!/bin/sh\necho UNEXPECTED_EXTERNAL_OPERATION >&2\nexit 99\n')
                 script.chmod(0o755)
             env = dict(os.environ, HOME=str(home), PATH=str(commands) + ':' + os.environ['PATH'])
-            cases = [[], ['--skip', 'desktop']] + [['--only', x] for x in ('system', 'kde', 'shell', 'git', 'runtimes', 'docker', 'dev', 'desktop', 'network', 'security', 'ai')]
+            cases = [[], ['--skip', 'desktop']] + [['--only', x] for x in ('system', 'kde', 'shell', 'git', 'runtimes', 'docker', 'dev', 'desktop', 'network', 'security', 'ai', 'accounts')]
             for args in cases:
                 result = subprocess.run(['bash', str(ROOT / 'bootstrap.sh'), '--dry-run', *args], env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -115,13 +115,20 @@ printf 'SHOULD_NOT_CONTINUE'
                 self.assertNotIn('[INSTALLED]', result.stdout)
                 if args[:1] == ['--only']:
                     plans = [x for x in result.stdout.splitlines() if '[PLANNED]' in x]
-                    self.assertGreaterEqual(len(plans), 1 if args[-1] == 'ai' else 2)
+                    self.assertGreaterEqual(len(plans), 1 if args[-1] in ('ai', 'accounts') else 2)
             self.assertEqual(list(home.rglob('*')), [])
 
     def test_argument_errors_do_not_run_installation(self):
         for args in (['--only'], ['--only', 'invalid'], ['--only', 'docker dev'], ['--skip', 'desktop', '--only', 'shell'], ['--wat']):
             result = subprocess.run(['bash', str(ROOT / 'bootstrap.sh'), *args], capture_output=True)
             self.assertEqual(result.returncode, 2)
+
+    def test_accounts_hardening_is_explicit_and_removes_root_equivalent_groups(self):
+        bootstrap = (ROOT / 'bootstrap.sh').read_text()
+        accounts = (ROOT / 'install/12-accounts.sh').read_text()
+        self.assertIn('current == accounts && $only != accounts', bootstrap)
+        self.assertIn("for group in sudo docker", accounts)
+        self.assertIn("su - root -c 'id -u'", accounts)
 
     def test_action_errexit_and_required_optional_boundaries(self):
         with tempfile.TemporaryDirectory() as d:

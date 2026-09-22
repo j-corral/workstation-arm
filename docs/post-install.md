@@ -16,6 +16,7 @@ Post-install manual checklist (only for applicable installed components):
 [ ] At the first KWallet prompt, select Classic (Blowfish) and set a wallet password; GPG mode needs an existing encryption-capable key
 [ ] Authenticate Tailscale only if approved by client IT
 [ ] Run sudo ./tools/dns_status.sh; after connecting the client VPN, confirm private names and external DNS still resolve
+[ ] Optional account separation: run `./bootstrap.sh --only accounts`. It prompts for the normal desktop account, enables/verifies terminal-only root administration, then removes `sudo` and Docker root-equivalent access from daily accounts. Administer with `su - root`, run the command directly, then `exit`.
 [ ] Ensure Firefox/Chrome Secure DNS uses the system resolver rather than a third-party DoH endpoint
 [ ] Arrange Proton VPN setup with IT (KDE is outside documented support)
 [ ] Ask client IT for its approved Bitdefender BEST Linux ARM64 kit; IT installs/enrolls it, then check systemctl status bdsec*

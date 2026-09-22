@@ -54,6 +54,7 @@ Desktop, Portainer, Ollama, LLM models or global Node.js is installed.
 ./bootstrap.sh --only network
 ./bootstrap.sh --only security
 ./bootstrap.sh --only ai
+./bootstrap.sh --only accounts
 ./bootstrap.sh --skip desktop
 ./bootstrap.sh --dry-run --only dev
 ```
@@ -80,6 +81,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
+| `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo` and any Docker root-equivalent access from daily accounts | Explicit opt-in only; required once selected |
 
 The `network` module keeps the `systemd-resolved` stub at `127.0.0.53` and
 `/etc/resolv.conf` symlink unchanged. Its root route `~.` forwards ordinary DNS

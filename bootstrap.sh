@@ -7,8 +7,8 @@ export WS_ROOT WS_DRY_RUN=0 WS_REPORT=''
 source "$WS_ROOT/lib/common.sh"
 # shellcheck source=lib/detection.sh
 source "$WS_ROOT/lib/detection.sh"
-modules=(system kde shell git runtimes docker dev desktop network security ai)
-files=(01-system.sh 02-kde.sh 03-shell.sh 04-git-ssh.sh 05-runtimes.sh 06-docker.sh 07-dev-tools.sh 08-desktop-apps.sh 09-network.sh 10-security.sh 11-ai.sh)
+modules=(system kde shell git runtimes docker dev desktop network security ai accounts)
+files=(01-system.sh 02-kde.sh 03-shell.sh 04-git-ssh.sh 05-runtimes.sh 06-docker.sh 07-dev-tools.sh 08-desktop-apps.sh 09-network.sh 10-security.sh 11-ai.sh 12-accounts.sh)
 only='' skip='' current=preflight
 valid_module() {
     local candidate
@@ -20,7 +20,7 @@ valid_module() {
 usage() {
     cat <<'HELP'
 Usage: ./bootstrap.sh [--dry-run] [--only MODULE | --skip MODULE]
-Modules: system kde shell git runtimes docker dev desktop network security ai
+Modules: system kde shell git runtimes docker dev desktop network security ai accounts
 One filter is allowed. Minimal transport dependencies are always installed.
 Dry-run is an offline plan: no writes, sudo, downloads or target validation.
 HELP
@@ -99,7 +99,7 @@ else
 fi
 for index in "${!modules[@]}"; do
     current=${modules[$index]}
-    if [[ -n $only && $current != "$only" || $current == "$skip" ]]; then
+    if [[ -n $only && $current != "$only" || $current == "$skip" || $current == accounts && $only != accounts ]]; then
         record SKIPPED "$current" 'Excluded by command-line filter.'
         continue
     fi
