@@ -51,3 +51,7 @@ class LocalDnsTests(unittest.TestCase):
     def test_service_uses_adguard_foreground_service_mode(self):
         service = (ROOT / 'config/adguard-home.service').read_text()
         self.assertIn('AdGuardHome -s run', service)
+
+    def test_adguard_config_directory_is_service_writable(self):
+        installer = (ROOT / 'tools/install_local_dns.sh').read_text()
+        self.assertIn('install -d -m 0750 -o workstation-adguard -g workstation-adguard /etc/workstation-adguard', installer)

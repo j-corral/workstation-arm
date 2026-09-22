@@ -94,7 +94,10 @@ committed=0
 on_exit() { local rc=$?; if (( ! committed )); then report 'Install failed; restoring saved DNS state.'; restore || true; fi; exit "$rc"; }
 trap on_exit EXIT
 if ! id workstation-adguard >/dev/null 2>&1; then useradd --system --no-create-home --home-dir /var/lib/workstation-adguard --shell /usr/sbin/nologin workstation-adguard; fi
-install -d -m 0755 /opt/workstation-adguard /etc/workstation-adguard
+install -d -m 0755 /opt/workstation-adguard
+# AdGuard saves configuration atomically beside the YAML file.  The dedicated
+# configuration directory must therefore be writable by its service account.
+install -d -m 0750 -o workstation-adguard -g workstation-adguard /etc/workstation-adguard
 install -d -m 0700 -o workstation-adguard -g workstation-adguard /var/lib/workstation-adguard
 if [[ ! -e /opt/workstation-adguard/AdGuardHome ]] || ! cmp -s "$binary" /opt/workstation-adguard/AdGuardHome; then
     systemctl stop AdGuardHome.service 2>/dev/null || true
