@@ -42,3 +42,8 @@ class LocalDnsTests(unittest.TestCase):
         config['dns']['bind_hosts'].append('172.17.0.1')
         self.assertEqual(self.check(config, '172.17.0.1').returncode, 0)
         self.assertNotEqual(self.check(config, '172.18.0.1').returncode, 0)
+
+    def test_dns_diagnostic_waits_for_new_service(self):
+        script = (ROOT / 'tools/dns_status.sh').read_text()
+        self.assertIn('ready<15', script)
+        self.assertLess(script.index('ready<15'), script.index('systemctl is-active --quiet AdGuardHome.service'))

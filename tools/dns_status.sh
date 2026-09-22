@@ -23,6 +23,13 @@ PY
 else printf '(not readable)\n'; fi
 printf 'Quad9 protocol: '; timeout 20 dig +time=4 +tries=1 +short TXT proto.on.quad9.net | tr -d '"' || true
 [[ $mode == --test ]] || exit 0
+# systemd can report a newly enabled Type=simple service as "activating" for a
+# short moment even after systemctl enable --now returns.  Wait before treating
+# that transient state as an installation failure.
+for ((ready=0; ready<15; ready++)); do
+    if systemctl is-active --quiet AdGuardHome.service; then break; fi
+    sleep 1
+done
 systemctl is-active --quiet AdGuardHome.service
 systemctl is-active --quiet systemd-resolved.service
 listeners=$(ss -H -lunpt '( sport = :53 )')
