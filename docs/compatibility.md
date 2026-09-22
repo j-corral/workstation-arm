@@ -71,3 +71,8 @@ repository moves scoped key storage to `/etc/apt/keyrings` and uses `signed-by=`
 On the target, APT performs signature validation and the installer checks native
 package architecture. No claim is made that a source package name alone proves
 application usability or exact-distribution vendor support.
+
+MacTahoe adds an architecture-independent static asset archive pinned to commit
+`cbf6a1f71b591d143184855d62f6272ce533e7c3`. Its SHA-256 was checked against the
+actual downloaded bytes. Plasma 6/Qt 6 assets are used; live SDDM rendering on
+Ubuntu ARM64 remains unverified. Breeze is retained for manual recovery.

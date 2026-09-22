@@ -98,3 +98,25 @@ Implementation references:
 - [Debian SDDM display-manager selection](https://sources.debian.org/src/sddm/0.21.0%2Bgit20250502.4fe234b-2/debian/sddm.postinst)
 - [SDDM last-session state](https://github.com/sddm/sddm/blob/v0.21.0/src/common/Configuration.h)
 - [SDDM session preselection](https://github.com/sddm/sddm/blob/v0.21.0/src/greeter/SessionModel.cpp)
+
+## SDDM greeter follow-up — 2026-09-22
+
+The user confirmed Plasma login works after installing the Xorg server and
+libinput driver, but reported an unthemed greeter and US-only keyboard there.
+The module now explicitly installs/selects the Ubuntu Breeze SDDM theme and
+installs an Xorg InputClass for fr/pc105, independently of user Plasma settings.
+The previous journal's empty theme configuration supports the missing-theme
+hypothesis; the corrected greeter appearance and keyboard require guest testing.
+
+## MacTahoe integration — 2026-09-22
+
+Downloaded the official commit archive cbf6a1f71b591d143184855d62f6272ce533e7c3
+and verified SHA-256 b8b427a036438100faeaf2204cde3e5b4e09efc1a06e7b620a072167bd6b4256.
+Inspected the Plasma 6 QML imports and upstream installation mappings. Staged
+actual desktop and greeter assets locally using our static-file installer.
+No upstream installation script was executed. Breeze remains installed;
+rollback after runtime rendering errors is manual, as documented in README.
+French keyboard configuration is independent of the theme, with Plasma readback
+checks added. Local asset tests cover repeat installs, preservation of Breeze
+and refusal of payload/destination symlinks. Guest QML rendering, colorscheme
+activation and the login keyboard still require actual VM validation.

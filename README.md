@@ -365,3 +365,45 @@ enable automatic login. Later manual session choices are remembered by SDDM.
 References: [Plasma keyboard schema](https://raw.githubusercontent.com/KDE/plasma-desktop/Plasma/6.6/kcms/keyboard/keyboardsettings.kcfg),
 [KWin NumLock handling](https://raw.githubusercontent.com/KDE/kwin/Plasma/6.6/src/xkb.cpp),
 [SDDM configuration](https://github.com/sddm/sddm/blob/develop/data/man/sddm.conf.rst.in).
+
+The KDE module explicitly installs `sddm-theme-breeze` and initially selects
+`breeze` in `/etc/sddm.conf`, preserving other keys. The optional MacTahoe step
+then selects MacTahoe after installing its assets. The X11 greeter receives French PC
+keyboard defaults from `/etc/X11/xorg.conf.d/90-workstation-keyboard.conf`;
+Plasma's user keyboard settings alone do not configure the login screen.
+Apply with `./bootstrap.sh --only kde` after updating the repository, then save
+work and reboot. Do not restart SDDM from an active desktop: it ends that session.
+
+### MacTahoe and Breeze recovery
+
+The KDE module installs the light variant from
+[MacTahoe-kde](https://github.com/vinceliuice/MacTahoe-kde), pinned to commit
+`cbf6a1f71b591d143184855d62f6272ce533e7c3` in `config/downloads.json` with a verified
+SHA-256. Only static assets are copied; upstream installers are not executed.
+The Plasma style, color scheme and window decorations are applied for the invoking
+user, and the Plasma 6 SDDM theme is selected system-wide. Panel layout stays as
+configured. Application widgets and icons use Breeze; separate MacTahoe icon,
+cursor and Kvantum projects are not downloaded. Reboot to apply all changes.
+
+The base KDE step selects Breeze first. If the optional MacTahoe download or
+asset preparation fails, Breeze remains the login theme and the failure appears
+in the report. Breeze stays installed after success. This is NOT an automatic
+runtime fallback if MacTahoe encounters a QML or graphics error at login.
+From a console, restore the login theme with:
+
+```bash
+sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze
+sudo reboot
+```
+
+For the desktop, choose Breeze under System Settings → Colors & Themes, or run
+as your normal user and then log out/in:
+
+```bash
+plasma-apply-lookandfeel -a org.kde.breeze.desktop
+```
+
+A KDE-module rerun selects MacTahoe again. French PC keyboard settings are
+independent of the theme: `/etc/default/keyboard`, the Xorg InputClass for SDDM,
+and the user's `kxkbrc` are all configured with `fr` and `pc105`; NumLock is set
+for SDDM and the next Plasma session. The installer reads back the Plasma keys.

@@ -54,5 +54,13 @@
     "algorithm": "sha256",
     "digest": "47dd2a112b2e169a072de01abc482a6a6341fcf8ce14acb62f7713963e78833e",
     "evidence": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.8.1.88030-arm64.tar.gz.sha256"
+  },
+  "mactahoe": {
+    "version": "cbf6a1f71b591d143184855d62f6272ce533e7c3",
+    "architecture": "all",
+    "url": "https://codeload.github.com/vinceliuice/MacTahoe-kde/tar.gz/cbf6a1f71b591d143184855d62f6272ce533e7c3",
+    "algorithm": "sha256",
+    "digest": "b8b427a036438100faeaf2204cde3e5b4e09efc1a06e7b620a072167bd6b4256",
+    "evidence": "https://github.com/vinceliuice/MacTahoe-kde/commit/cbf6a1f71b591d143184855d62f6272ce533e7c3"
   }
 }

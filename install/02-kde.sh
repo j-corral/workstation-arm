@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 kde_install() {
-    apt_install kde-plasma-desktop plasma-session-wayland sddm konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin
+    # SDDM's default greeter uses X11 even when the selected desktop is Wayland.
+    # apt_install disables Recommends, so install its server/input driver explicitly.
+    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin
     need_commands plasmashell startplasma-wayland
+    [[ -x /usr/bin/X ]] || { fail 'SDDM X11 server /usr/bin/X is missing; display manager unchanged.'; return 1; }
+    /usr/bin/X -version
+    [[ -f /usr/share/sddm/themes/breeze/Main.qml ]] || { fail 'SDDM Breeze theme is missing'; return 1; }
+    [[ ! -L /etc/sddm.conf ]] || { fail 'Refusing symlink SDDM configuration'; return 1; }
+    # Use the highest-precedence local file; preserve its other settings.
+    sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze
     kde_configure_login
     manual KDE 'Reboot to use SDDM with Plasma Wayland preselected, then sign in normally and test Parallels graphics. The current session has not been restarted.'
     if apt-cache show plasma-session-x11 >/dev/null 2>&1; then
@@ -44,6 +52,10 @@ keyboard_install() {
     need_commands kwriteconfig6 setupcon
     sudo python3 "$WS_ROOT/tools/keyboard_config.py" /etc/default/keyboard
     sudo setupcon --save-only
+    # The greeter has its own X server; user Plasma preferences do not apply.
+    sudo install -d -m 0755 /etc/X11/xorg.conf.d
+    [[ ! -L /etc/X11/xorg.conf.d/90-workstation-keyboard.conf ]] || { fail 'Refusing symlink Xorg keyboard configuration'; return 1; }
+    sudo install -m 0644 "$WS_ROOT/config/90-workstation-keyboard.conf" /etc/X11/xorg.conf.d/90-workstation-keyboard.conf
 
     # Native KConfig writer preserves unrelated preferences. Run as the user.
     kwriteconfig6 --file kxkbrc --group Layout --key Model pc105
@@ -57,9 +69,37 @@ keyboard_install() {
     [[ ! -L /etc/sddm.conf.d/90-workstation-keyboard.conf ]] || { fail 'Refusing symlink SDDM keyboard configuration'; return 1; }
     printf '[General]\nNumlock=on\n' > "$WS_TMP/sddm-keyboard.conf"
     sudo install -m 0644 "$WS_TMP/sddm-keyboard.conf" /etc/sddm.conf.d/90-workstation-keyboard.conf
+    sudo kwriteconfig6 --file /etc/sddm.conf --group General --key Numlock on
+    [[ $(kreadconfig6 --file kxkbrc --group Layout --key LayoutList) == fr ]]
+    [[ $(kreadconfig6 --file kxkbrc --group Layout --key Model) == pc105 ]]
+    [[ $(kreadconfig6 --file kcminputrc --group Keyboard --key NumLock) == 0 ]]
     manual Keyboard 'After reboot, sign in to the preselected Plasma session: French PC AZERTY (fr/pc105) and NumLock on. Existing GNOME input sources are separate. SDDM Numlock applies to its X11 greeter; a Wayland greeter needs compositor-specific settings. /etc/sddm.conf can override the drop-in.'
 }
 main() {
     component required KDE kde_install 'Minimal Plasma desktop; select SDDM and Plasma Wayland for the next boot, preserving the running session.'
     component required Keyboard keyboard_install 'French PC AZERTY by default; enable NumLock at Plasma startup and for the SDDM X11 greeter.'
+    component optional MacTahoe mactahoe_install 'Pinned Plasma 6 desktop/SDDM theme; retain Breeze for recovery.'
+}
+
+mactahoe_install() {
+    local source share
+    apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support
+    locked_download mactahoe "$WS_TMP/mactahoe.tar.gz"
+    extract_archive "$WS_TMP/mactahoe.tar.gz" "$WS_TMP/theme"
+    source="$WS_TMP/theme/MacTahoe-kde-cbf6a1f71b591d143184855d62f6272ce533e7c3"
+    share=${XDG_DATA_HOME:-$HOME/.local/share}
+    python3 "$WS_ROOT/tools/theme_assets.py" prepare "$source" "$share" "$WS_TMP/greeter"
+    sudo python3 "$WS_ROOT/tools/theme_assets.py" copy "$WS_TMP/greeter" /usr/share/sddm/themes/MacTahoe
+    # Set only installed components, preserving layout and keyboard preferences.
+    kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light
+    QT_QPA_PLATFORM=offscreen plasma-apply-colorscheme MacTahoeLight
+    kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Breeze
+    kwriteconfig6 --file kdeglobals --group Icons --key Theme breeze
+    kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
+    kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__MacTahoe-Light
+    kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XAI
+    kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ''
+    # Activate last: a download or staging failure leaves the installed Breeze greeter.
+    sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current MacTahoe
+    manual MacTahoe 'Reboot to apply. Breeze remains installed. For login-theme recovery: sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze, then reboot. Runtime theme failures do not automatically switch to Breeze.'
 }
