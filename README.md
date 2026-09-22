@@ -77,9 +77,19 @@ set. This also happens with `--only`. Module order is fixed:
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
 | `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar, Bitwarden Flatpak ARM64, Spotify Web shortcut | Optional; Proton Mail skipped |
-| `network` | Tailscale package and daemon | Optional; Proton VPN manual |
+| `network` | Tailscale package and daemon; Quad9 Secure DNS-over-TLS via systemd-resolved | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
+
+The `network` module installs Quad9 Secure DoT only when Ubuntu uses the
+`systemd-resolved` stub. It checks Quad9's `proto.on.quad9.net` response and
+removes its own new drop-in if the check fails. A client VPN can supply private
+DNS and override or conflict with system DNS; reconnect the VPN and test both
+private and public names. Browser-specific secure DNS can also bypass the
+system setting. For manual recovery from the guest console, remove only
+`/etc/systemd/resolved.conf.d/60-workstation-quad9.conf` and restart
+`systemd-resolved.service`. Quad9 Secure filters malicious domains, not ads or
+child-inappropriate content.
 
 “Required” means failure stops the selected run. It does not override `--skip`.
 An optional failure is recorded, later components run, and the overall exit code

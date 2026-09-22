@@ -16,6 +16,7 @@ Post-install manual checklist (only for applicable installed components):
 [ ] Validate GUI apps, including Obsidian's extracted Electron build
 [ ] At the first KWallet prompt, select Classic (Blowfish) and set a wallet password; GPG mode needs an existing encryption-capable key
 [ ] Authenticate Tailscale only if approved by client IT
+[ ] Run ./verify.sh --quad9; after connecting the client VPN, confirm private names and external DNS still resolve
 [ ] Arrange Proton VPN setup with IT (KDE is outside documented support)
 [ ] Ask client IT for its approved Bitdefender BEST Linux ARM64 kit; IT installs/enrolls it, then check systemctl status bdsec*
 [ ] Launch codex and claude from a project; sign in to each account interactively if permitted
