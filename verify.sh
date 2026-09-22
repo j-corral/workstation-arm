@@ -3,12 +3,13 @@ set -uo pipefail
 # Read-only by default. Explicit network tests are opt-in and never logged to disk.
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
-hello=0 link=0 failures=0
+hello=0 link=0 lm_host='' failures=0
 while (( $# )); do
     case $1 in
         --docker-hello) hello=1 ;;
         --lm-link) link=1 ;;
-        --help|-h) printf 'Usage: ./verify.sh [--docker-hello] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
+        --lm-host) [[ $# -ge 2 ]] || { printf 'Missing URL after --lm-host\n' >&2; exit 2; }; lm_host=$2; shift ;;
+        --help|-h) printf 'Usage: ./verify.sh [--docker-hello] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
         *) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift
@@ -109,6 +110,14 @@ package_check 'KWallet Manager' kwalletmanager
 command_check optional Obsidian workstation-obsidian
 package_check ONLYOFFICE onlyoffice-desktopeditors
 package_check Solaar solaar
+if command -v flatpak >/dev/null && flatpak info --user com.bitwarden.desktop >/dev/null 2>&1; then
+    bitwarden_arch=$(flatpak info --user --show-arch com.bitwarden.desktop)
+    if [[ $bitwarden_arch == aarch64 ]]; then ok Bitwarden 'aarch64 Flatpak installed; GUI/login not tested';
+    else bad Bitwarden "foreign Flatpak architecture: $bitwarden_arch"; fi
+else warn Bitwarden 'aarch64 Flatpak not installed for this user'; fi
+if [[ -f $HOME/.local/share/applications/workstation-spotify-web.desktop ]]; then
+    ok 'Spotify Web' 'application launcher present; browser/playback not tested'
+else warn 'Spotify Web' 'application launcher absent'; fi
 manual 'Logitech devices' 'Attach receiver to the guest or pair over Bluetooth, then run solaar show.'
 package_check 'Proton Mail (automatic ARM64 install unsupported)' proton-mail
 section NETWORK
@@ -122,13 +131,30 @@ if command -v systemctl >/dev/null; then
     done
 fi
 manual 'Network enrollment/rules' 'Authenticate only with client approval; review VPN/Tailscale/client VPN coexistence and OpenSnitch rules'
+manual 'Bitdefender GravityZone BEST' 'Client IT must supply/install/enroll its private Linux ARM64 kit; check systemctl status bdsec* after installation.'
 section AI
+command_check optional 'Codex CLI' codex
+command_check optional 'Claude Code' claude
+if [[ -n $lm_host ]]; then
+    if [[ ! $lm_host =~ ^https?://[A-Za-z0-9.:-]+$ ]]; then
+        bad 'Mac LM Studio API' 'Use http://HOST:PORT or https://HOST:PORT without credentials/path'
+    else
+        lm_status=$(curl --noproxy '*' --silent --output /dev/null --write-out '%{http_code}' --connect-timeout 5 --max-time 10 "$lm_host/v1/models") || lm_status=000
+        case $lm_status in
+            200) ok 'Mac LM Studio API' 'model-list endpoint reachable; host inference still needs a live request' ;;
+            401|403) ok 'Mac LM Studio API' 'server reachable and authentication required; provide token only to your chosen client' ;;
+            *) bad 'Mac LM Studio API' "HTTP $lm_status; check Mac server, host address, firewall and authentication" ;;
+        esac
+    fi
+else manual 'Mac LM Studio API' 'Use ./verify.sh --lm-host http://HOST_IP:1234 after enabling the server on macOS'; fi
+manual 'Guest LM Studio runtime' 'Not required for macOS host inference via HTTP API.'
+# Legacy LM Link status remains available for users who already installed lms.
 command_check optional lms lms
 # llmster is normally managed under ~/.lmstudio, not exposed as a PATH command.
 if command -v llmster >/dev/null; then ok llmster 'executable found; daemon not started';
 elif [[ -d $HOME/.lmstudio/llmster ]] && [[ -n $(find "$HOME/.lmstudio/llmster" -type f -name llmster -perm -u+x -print -quit) ]]; then
     ok llmster 'managed executable found; daemon not started'
-else manual llmster 'Automatic install is blocked by bundled-model policy; see docs/compatibility.md'; fi
+else manual llmster 'Not required for the macOS LM Studio HTTP API; see docs/compatibility.md'; fi
 if (( link )); then
     if command -v lms >/dev/null; then
         printf 'Read-only LM Link status (may include peer/device names; not saved):\n'

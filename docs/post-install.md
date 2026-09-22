@@ -8,6 +8,8 @@ Post-install manual checklist (only for applicable installed components):
 [ ] In Plasma Wayland, optionally open Foot and verify its translucent theme
 [ ] Open local DOCX, XLSX and PPTX files in ONLYOFFICE
 [ ] Attach Logitech receiver to guest or pair with Bluetooth; run solaar show
+[ ] Open Bitwarden from Plasma and sign in; confirm the vault unlocks
+[ ] Open Spotify (Web) from Plasma, sign in and test browser playback
 [ ] Generate a dedicated passphrase-protected client SSH key
 [ ] Set client-specific Git identity; gh auth login; glab auth login
 [ ] Open Toolbox, authenticate JetBrains and select needed IDEs
@@ -15,10 +17,11 @@ Post-install manual checklist (only for applicable installed components):
 [ ] At the first KWallet prompt, select Classic (Blowfish) and set a wallet password; GPG mode needs an existing encryption-capable key
 [ ] Authenticate Tailscale only if approved by client IT
 [ ] Arrange Proton VPN setup with IT (KDE is outside documented support)
-[ ] Install/enroll GravityZone using the client-provided package
-[ ] Resolve the model-free LM tooling packaging blocker with IT
-[ ] Once compliant tooling exists: lms login; lms link enable; pair macOS LM Studio
-[ ] Verify LM Link and host inference; keep models on macOS
+[ ] Ask client IT for its approved Bitdefender BEST Linux ARM64 kit; IT installs/enrolls it, then check systemctl status bdsec*
+[ ] Launch codex and claude from a project; sign in to each account interactively if permitted
+[ ] Start LM Studio's API server on macOS; enable network access and authentication on the approved private VM-to-host route
+[ ] From Ubuntu, run ./verify.sh --lm-host http://HOST_IP:1234 and configure chosen apps with base URL http://HOST_IP:1234/v1
+[ ] Test inference with a non-sensitive prompt and confirm macOS handled it; keep models on macOS
 [ ] Review/activate OpenSnitch and test all VPN/AI paths
 [ ] Review Parallels sharing/isolation and clipboard policy
 [ ] Run ./verify.sh; explicitly opt into --docker-hello and --lm-link

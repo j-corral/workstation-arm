@@ -56,7 +56,7 @@ component() {
 }
 repository() {
     local name=$1 uri=$2 suite=$3 section=$4 key_url=$5
-    local path="/etc/apt/sources.list.d/workstation-$1.list" key="/etc/apt/keyrings/workstation-$1.$6" existing
+    local path="/etc/apt/sources.list.d/workstation-$1.list" key="/etc/apt/keyrings/workstation-$1.$6" existing fingerprint
     [[ ! -L $path && ! -L $key ]] || { fail "Refusing symlink repository/key for $name"; return 1; }
     install -d -m 0700 "$WS_TMP/gnupg"
     # Refuse ambiguous existing repositories; never overwrite an administrator's entry.
@@ -70,10 +70,18 @@ repository() {
     if [[ ! -e $key ]]; then
         download "$key_url" "$WS_TMP/key"
         gpg --homedir "$WS_TMP/gnupg" --batch --show-keys "$WS_TMP/key" >/dev/null
+        if [[ -n ${7:-} ]]; then
+            fingerprint=$(gpg --homedir "$WS_TMP/gnupg" --batch --show-keys --with-colons "$WS_TMP/key" | awk -F: '$1 == "fpr" {print $10; exit}')
+            [[ $fingerprint == "$7" ]] || { fail "Repository key fingerprint mismatch for $name."; return 1; }
+        fi
         sudo install -d -m 0755 /etc/apt/keyrings
         sudo install -m 0644 "$WS_TMP/key" "$key"
     else
         gpg --homedir "$WS_TMP/gnupg" --batch --show-keys "$key" >/dev/null
+        if [[ -n ${7:-} ]]; then
+            fingerprint=$(gpg --homedir "$WS_TMP/gnupg" --batch --show-keys --with-colons "$key" | awk -F: '$1 == "fpr" {print $10; exit}')
+            [[ $fingerprint == "$7" ]] || { fail "Repository key fingerprint mismatch for $name."; return 1; }
+        fi
     fi
     sudo install -m 0644 "$WS_TMP/source.list" "$path"
     apt_update

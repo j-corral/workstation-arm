@@ -5,8 +5,8 @@ Parallels Desktop Pro on an Apple Silicon Mac. KDE Plasma and Zsh are the target
 user environment. Installation runs inside the guest, as its normal desktop user.
 
 **Read the [compatibility decisions](docs/compatibility.md) before installing.**
-The current official LM Studio headless bundle includes a model, so its automatic
-installation is deliberately blocked. Proton Mail's inspected Linux package is
+LM Studio inference runs on macOS and the VM uses its HTTP API; no LM Studio
+runtime is installed in Ubuntu. Proton Mail's inspected Linux package is
 amd64. Proton VPN setup is manual because its official support targets GNOME.
 Toolbox has an ARM64 build, but does not list Ubuntu 26.04 among tested releases.
 
@@ -76,10 +76,10 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar | Optional; Proton Mail skipped |
+| `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar, Bitwarden Flatpak ARM64, Spotify Web shortcut | Optional; Proton Mail skipped |
 | `network` | Tailscale package and daemon | Optional; Proton VPN manual |
-| `security` | AppArmor checks, normal unattended updates, OpenSnitch packages | AppArmor/updates required; OpenSnitch optional |
-| `ai` | Reports current model-free tooling blocker; **no download** | Manual |
+| `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
+| `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
 
 “Required” means failure stops the selected run. It does not override `--skip`.
 An optional failure is recorded, later components run, and the overall exit code
@@ -142,7 +142,10 @@ reconciliation; the bootstrap cannot inventory every custom installation.
 The guest is a dedicated client workstation. No keys are generated, accounts
 joined, credentials supplied, or external services authenticated. SSH is
 **client only**. AppArmor remains enabled. GravityZone installation/enrollment
-belongs to client IT; no competing realtime antivirus is installed.
+belongs to client IT; no competing realtime antivirus is installed. Current
+Bitdefender BEST supports Ubuntu 26.04 ARM64, but its installation kit and
+enrollment are private to the client; the public GravityZone management
+appliance is not the endpoint agent.
 
 Docker uses its local Unix socket. **Membership of the `docker` group grants
 root-equivalent control of this VM.** No group membership is added automatically.
@@ -163,9 +166,8 @@ Review in Parallels, with the VM stopped where necessary:
   SSH agents, private keys or password stores implicitly.
 - Have IT approve any host inference path before sending client prompts/data.
 
-LM Link and the optional future Ollama path deliberately connect VM and host;
-this is **not an air-gapped architecture**. LM Link also involves vendor
-account/control-plane connectivity. The repository does not configure Parallels
+The macOS LM Studio API deliberately connects VM and host; this is **not an
+air-gapped architecture**. The repository does not configure Parallels
 host settings, host firewall rules, bridged interfaces or host networking.
 
 ## Manual setup after installation
@@ -225,63 +227,54 @@ sudo systemctl enable --now opensnitch
 ```
 
 Review application-specific rules for Docker, Tailscale, Proton/client VPNs and
-LM Link. Do not create a blanket allow rule. If installation fails after masking,
+the Mac LM Studio API. Do not create a blanket allow rule. If installation fails after masking,
 the mask remains deliberately; check package state before unmasking. Existing
 OpenSnitch services/rules are preserved. Verify AppArmor with `sudo aa-status`.
 Standard Ubuntu unattended-upgrades and APT timers are enabled; existing disabled
 policies fail for review instead of being silently overwritten. Review allowed
 security origins and third-party update policy with IT.
 
-## LM Link: preferred architecture, currently blocked bootstrap
+## LM Studio inference on the Mac
 
 ```text
-Ubuntu VM (model-free client tooling)
-    └─ LM Link → macOS LM Studio → models / Metal inference on M3 Max
+Ubuntu VM (HTTP client)
+    └─ private VM-to-host network → macOS LM Studio API → models / Metal inference
 ```
 
-The inspected current Linux ARM64 `llmster` full bundle contains an embedded
-GGUF embedding model. To respect the no-model-download rule, `--only ai` reports
-this blocker and does not fetch/install it. Do not work around this by running
-the full official installer or by downloading then deleting its model. We have
-not verified a current official model-free bootstrap. See the exact evidence in
-[compatibility.md](docs/compatibility.md).
-
-Once official compliant tooling is available and approved (or on an existing
-compliant installation), the documented pairing steps are:
+On the Mac, load the model in LM Studio, open Developer, start the API server,
+enable **Serve on Local Network** and **Require Authentication**, and note the
+address reachable from the Parallels guest. Restrict access to the private
+VM-to-host network. The VM needs no `llmster`, LM Link, inference runtime or
+model. From Ubuntu:
 
 ```bash
-lms login
-lms link enable
-./verify.sh --lm-link
+./verify.sh --lm-host http://HOST_IP:1234
 ```
 
-Enable LM Link on macOS LM Studio, connect the approved account/devices and keep
-all model downloads on macOS. The status report must show the host peer. In a
-manual inference test, explicitly select a **remote host model**, send a
-non-sensitive test prompt and confirm in macOS LM Studio that the host handled
-it. Repeat with the client's VPN enabled. A zero status-command exit is not
-proof of pairing, model placement or inference. Verification never loads a
-model, starts an inference server, authenticates or stores output on disk.
+Set the chosen Ubuntu app's OpenAI-compatible base URL to
+`http://HOST_IP:1234/v1` and supply its API token within that app. Do not put
+the token in this repository or the verification command. Send a non-sensitive
+test prompt and confirm on the Mac that LM Studio handled it. Repeat with the
+client VPN enabled. A reachable `/v1/models` endpoint is not inference proof.
+See [LM Studio's network server documentation](https://lmstudio.ai/docs/developer/core/server/serve-on-network)
+and [compatible API endpoints](https://lmstudio.ai/docs/developer/openai-compat).
 
-Fallback only, **not configured**:
+Alternative only, **not configured**:
 
 ```text
 Ubuntu VM → private Parallels Host-Only network → macOS Ollama API → host model
 ```
 
-If LM Link cannot coexist with the client VPN, have IT design a narrow private
-VM-to-host API path. Bind the host service to the specific private interface and
-restrict access to the VM; do not expose it to the LAN/public internet or use a
-wildcard bind without appropriate controls. Ollama stays on macOS. This repo
-installs no Ollama, model or secondary inference service inside Ubuntu and makes
-no host networking changes.
+If the LM Studio API cannot coexist with the client VPN, have IT review the
+private VM-to-host route. This repo installs no Ollama, model or secondary
+inference service inside Ubuntu and makes no host networking changes.
 
 ## Verification and maintenance
 
 ```bash
 ./verify.sh                    # local inventory/status; no sudo prompt
 ./verify.sh --docker-hello     # explicit pull/run of ARM64 hello-world
-./verify.sh --lm-link          # explicit read-only LM Link status after pairing
+./verify.sh --lm-host http://HOST_IP:1234 # read-only Mac LM Studio API reachability
 ./tests/run.sh                 # offline regression tests + bash -n + ShellCheck
 sudo docker system df         # disk inventory, not cleanup
 ncdu "$HOME"                  # inspect guest home usage

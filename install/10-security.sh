@@ -36,11 +36,11 @@ opensnitch_install() {
     if ! package_installed opensnitch; then sudo systemctl mask opensnitch.service; fi
     apt_install opensnitch python3-opensnitch-ui opensnitch-ebpf-modules
     need_commands opensnitchd opensnitch-ui
-    manual OpenSnitch 'Installed; new installations are masked until review. In a VM console, open the GUI, then sudo systemctl unmask opensnitch && sudo systemctl enable --now opensnitch. Review Docker/VPN/Tailscale/LM Link rules.'
+    manual OpenSnitch 'Installed; new installations are masked until review. In a VM console, open the GUI, then sudo systemctl unmask opensnitch && sudo systemctl enable --now opensnitch. Review Docker/VPN/Tailscale/Mac LM Studio API rules.'
 }
 main() {
     component required AppArmor apparmor_check 'Verify enabled kernel module, profiles and active service; never disable enforcement.'
     component required 'Automatic security updates' updates_install 'Ubuntu unattended-upgrades and APT timers; preserve existing policy or fail on disabled updates.'
     component optional OpenSnitch opensnitch_install 'Official Ubuntu ARM64 packages; defer first activation to avoid disrupting connectivity.'
-    manual GravityZone 'Client IT supplies and enrolls the approved package separately. No enrollment data or antivirus installed here.'
+    manual 'Bitdefender GravityZone BEST' 'Ubuntu 26.04 ARM64 is supported by current BEST releases, but the endpoint installer is unique to the client. Obtain the approved Linux ARM64 kit from client IT; IT installs/enrolls it. No enrollment data or antivirus is stored here.'
 }

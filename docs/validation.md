@@ -59,7 +59,7 @@ Not validated here:
 - Plasma/Parallels graphics, Zed Vulkan, GUI application startup and Electron
   sandbox compatibility.
 - Docker daemon/Compose/Buildx operation or hello-world execution in the guest.
-- VPN coexistence, OpenSnitch rule behavior, LM Link pairing or host inference.
+- VPN coexistence, OpenSnitch rule behavior, Mac LM Studio API reachability or host inference.
 
 Guest acceptance procedure:
 
@@ -71,8 +71,8 @@ Guest acceptance procedure:
 5. Rerun bootstrap, confirm one managed shell block/source per component and
    unchanged pre-existing user configuration outside managed sections.
 6. Enroll services separately with IT, activate/review OpenSnitch from a console,
-   test all VPN paths and complete the manual checklist. LM Link remains blocked
-   until an official model-free bootstrap is verified.
+   test all VPN paths and complete the manual checklist. Confirm host inference
+   through the macOS LM Studio API with a non-sensitive prompt.
 7. Capture an approved post-bootstrap snapshot; do not commit enrollment data.
 
 ## French keyboard follow-up — 2026-09-22

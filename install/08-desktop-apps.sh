@@ -63,6 +63,33 @@ solaar_install() {
     need_commands solaar
     manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Keys S and MX Anywhere 2 settings depend on the detected HID++ features.'
 }
+bitwarden_install() {
+    apt_install flatpak
+    need_commands flatpak
+    flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub com.bitwarden.desktop
+    [[ $(flatpak info --user --show-arch com.bitwarden.desktop) == aarch64 ]] || { fail 'Bitwarden Flatpak is not aarch64.'; return 1; }
+    manual Bitwarden 'Open the desktop app and sign in interactively; no vault credentials are handled by bootstrap.'
+}
+spotify_web_install() {
+    apt_install xdg-utils
+    need_commands xdg-open
+    local directory="$HOME/.local/share/applications" shortcut="$HOME/.local/share/applications/workstation-spotify-web.desktop"
+    install -d -m 0755 "$directory"
+    [[ ! -L $shortcut ]] || { fail 'Refusing symlink Spotify shortcut.'; return 1; }
+    cat > "$WS_TMP/spotify-web.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Spotify (Web)
+Comment=Spotify web player in the default browser
+Exec=xdg-open https://open.spotify.com/
+Icon=multimedia-player
+Terminal=false
+Categories=Audio;AudioVideo;Network;
+EOF
+    install -m 0644 "$WS_TMP/spotify-web.desktop" "$shortcut"
+    manual Spotify 'Open Spotify (Web) from the application menu and sign in. Native Spotify Linux packages reviewed do not provide ARM64.'
+}
 keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
 kwallet_install() {
     apt_install kwalletmanager
@@ -116,5 +143,7 @@ main() {
     component optional Obsidian obsidian_install 'Extract pinned official ARM64 AppImage; use software rendering in a VM.'
     component optional ONLYOFFICE onlyoffice_install 'Official signed APT source, native ARM64 package, local Office files.'
     component optional Solaar solaar_install 'Native ARM64 Ubuntu package for supported Logitech HID++ devices.'
+    component optional Bitwarden bitwarden_install 'Official Bitwarden Flatpak on Flathub for aarch64; account login remains interactive.'
+    component optional 'Spotify Web' spotify_web_install 'Create a Spotify web-player launcher; no supported native ARM64 desktop package verified.'
     manual 'Proton Mail' 'Unsupported for automatic ARM64 installation: official Linux .deb inspected is amd64 (1.14.0). Use the web app manually.'
 }
