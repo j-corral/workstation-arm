@@ -35,7 +35,22 @@ EOF
     else
         manual Konsole "Existing default profile $current_profile retained; select Workstation in Konsole if desired."
     fi
+    [[ -f /usr/share/applications/org.kde.konsole.desktop ]] || { fail 'Konsole desktop service is missing.'; return 1; }
+    kwriteconfig6 --file kdeglobals --group General --key TerminalApplication konsole
+    kwriteconfig6 --file kdeglobals --group General --key TerminalService org.kde.konsole.desktop
     manual Konsole 'Default Workstation profile enables a translucent background in Plasma; verify compositor rendering in the guest.'
+}
+foot_install() {
+    apt_install foot fonts-jetbrains-mono
+    need_commands foot
+    local directory="$HOME/.config/foot" settings="$HOME/.config/foot/foot.ini"
+    install -d -m 0755 "$directory"
+    [[ ! -L $settings ]] || { fail 'Refusing symlink Foot configuration.'; return 1; }
+    if [[ ! -e $settings ]]; then
+        install -m 0644 "$WS_ROOT/config/foot.ini" "$settings"
+    fi
+    foot --check-config --config="$settings"
+    manual Foot 'Optional Wayland terminal with translucent background and JetBrains Mono; launch with foot in Plasma Wayland. Konsole remains the default.'
 }
 onlyoffice_install() {
     repository onlyoffice https://download.onlyoffice.com/repo/debian squeeze main https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE asc
@@ -49,6 +64,10 @@ solaar_install() {
     manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Keys S and MX Anywhere 2 settings depend on the detected HID++ features.'
 }
 keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
+kwallet_install() {
+    apt_install kwalletmanager
+    manual KWallet 'On first prompt, choose Classic (Blowfish encrypted file) and set a private wallet password. GPG mode requires an existing encryption-capable GPG key; bootstrap does not create one or store a password.'
+}
 obsidian_install() {
     # The upstream ARM64 AppImage asks for the unversioned libz.so at load time.
     # Ubuntu provides it in zlib1g-dev; zlib1g alone provides only libz.so.1.
@@ -90,8 +109,10 @@ EOF
     manual Obsidian 'ARM64 libz.so supplied, AppImage extracted to avoid FUSE, and VM launcher disables Electron GPU. GUI compatibility still requires a live launch. Existing vaults are untouched.'
 }
 main() {
-    component optional 'Konsole translucent terminal' konsole_install 'Native KDE terminal with a user-owned translucent profile; replaces Ghostty in the bootstrap.'
+    component optional 'Konsole translucent terminal' konsole_install 'Default KDE terminal with a user-owned translucent profile.'
+    component optional 'Foot terminal' foot_install 'Optional native ARM64 Wayland terminal with translucent color theme; Konsole remains default.'
     component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
+    component optional 'KWallet Manager' kwallet_install 'Manage Plasma secrets interactively; no automatic wallet/password creation.'
     component optional Obsidian obsidian_install 'Extract pinned official ARM64 AppImage; use software rendering in a VM.'
     component optional ONLYOFFICE onlyoffice_install 'Official signed APT source, native ARM64 package, local Office files.'
     component optional Solaar solaar_install 'Native ARM64 Ubuntu package for supported Logitech HID++ devices.'

@@ -76,7 +76,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Transparent Konsole profile, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar | Optional; Proton Mail skipped |
+| `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar | Optional; Proton Mail skipped |
 | `network` | Tailscale package and daemon | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages | AppArmor/updates required; OpenSnitch optional |
 | `ai` | Reports current model-free tooling blocker; **no download** | Manual |
@@ -317,7 +317,11 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   `vkcube` in Plasma. Zed requires Vulkan; when Parallels does not expose a
   compatible device, use VS Code. Rerunning `--only dev` repairs Zed's desktop
   icon but cannot add Vulkan support to the virtual GPU.
-- Konsole replaces Ghostty and uses a translucent Workstation profile.
+- Konsole is the default terminal and uses a translucent Workstation profile.
+  Foot is a second, lightweight Wayland terminal with JetBrains Mono and a
+  dark translucent palette; start it with `foot`. The desktop module does not
+  install Ghostty. An older Ghostty installation remains until removed by the
+  user; its command will still fail on a virtual GPU below OpenGL 4.3.
 - Obsidian's desktop launcher now uses the extracted, pinned ARM64 AppImage to
   avoid FUSE, installs Ubuntu's ARM64 `zlib1g-dev` for the upstream `libz.so`
   dependency, and disables Electron GPU acceleration in a VM. If the previous
@@ -326,6 +330,10 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   needs a live check. If Obsidian or Bruno hits an AppArmor/Electron sandbox
   restriction, use vendor/IT guidance
   for a scoped policy; do not disable AppArmor or pass `--no-sandbox` globally.
+- If Plasma opens KWallet with “no keys suitable for encryption,” the GPG wallet
+  option has no usable GPG key. Select **Classic (Blowfish encrypted file)** and
+  set a private wallet password in the dialog. The desktop module installs
+  KWallet Manager but does not generate a GPG identity or store a password.
 - A checksum mismatch stops installation. Investigate changed vendor bytes,
   corruption or proxy behavior; never bypass the check. No downloaded binary is
   committed to this repository.

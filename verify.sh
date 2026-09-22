@@ -103,7 +103,9 @@ package_check Bruno bruno
 manual 'GUI compatibility' 'Open installed applications inside Plasma; command/package presence does not prove rendering or sandbox compatibility'
 section DESKTOP
 command_check optional Konsole konsole
+command_check optional 'Foot (Wayland alternative)' foot
 command_check optional KeePassXC keepassxc
+package_check 'KWallet Manager' kwalletmanager
 command_check optional Obsidian workstation-obsidian
 package_check ONLYOFFICE onlyoffice-desktopeditors
 package_check Solaar solaar
