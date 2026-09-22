@@ -19,6 +19,22 @@ spec.loader.exec_module(blocks)
 
 
 class SafetyTests(unittest.TestCase):
+    def test_broken_awk_stops_with_actionable_diagnostic(self):
+        env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
+        script = '''
+set -Eeuo pipefail
+source "$WS_ROOT/lib/logging.sh"
+source "$WS_ROOT/lib/detection.sh"
+awk() { return 133; }
+check_awk
+printf 'SHOULD_NOT_CONTINUE'
+'''
+        result = subprocess.run(['bash', '-c', script], env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 133)
+        self.assertIn('awk cannot run', result.stdout)
+        self.assertIn('file -L /usr/bin/awk', result.stdout)
+        self.assertNotIn('SHOULD_NOT_CONTINUE', result.stdout)
+
     def test_managed_section_preserves_content_mode_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / '.zshrc'

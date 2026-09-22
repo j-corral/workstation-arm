@@ -296,6 +296,13 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
 
 ## Troubleshooting, rollback and removal
 
+- If Rosetta reports `unhandled auxillary vector type 29` while running `awk`,
+  inspect `file -L /usr/bin/awk /usr/bin/python3` and
+  `readlink -f /usr/bin/awk`. An ARM64 kernel and native dpkg architecture do not
+  guarantee that every executable is ARM64. The bootstrap now probes `awk`
+  before sudo or APT, so this failure cannot also break its final report.
+  Identify the actual executable/package before repairing alternatives or
+  reinstalling a native package; no automatic Rosetta/kernel changes are made.
 - On package errors, inspect the visible APT error and the report's component.
   Check `apt-cache policy PACKAGE`, Ubuntu `universe`, disk space, DNS and locks.
   Do not substitute a different Ubuntu codename or force an amd64 package.

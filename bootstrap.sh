@@ -40,6 +40,7 @@ while (( $# )); do
 done
 if [[ $WS_DRY_RUN == 0 ]]; then
     check_target
+    check_awk
     command -v sudo >/dev/null
     sudo -v
     command -v flock >/dev/null

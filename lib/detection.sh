@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+check_awk() {
+    local rc
+    if awk 'BEGIN { exit 0 }'; then
+        return 0
+    else
+        rc=$?
+        log ERROR "awk cannot run (exit $rc). Stop before sudo/APT; inspect: file -L /usr/bin/awk; readlink -f /usr/bin/awk. Rosetta being enabled does not prove this executable is native ARM64."
+        return "$rc"
+    fi
+}
 check_target() {
     [[ $(uname -s) == Linux && -r /etc/os-release ]] || { log ERROR 'Requires Ubuntu 26.04 ARM64.'; return 1; }
     # shellcheck disable=SC1091
