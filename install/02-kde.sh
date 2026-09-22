@@ -83,7 +83,7 @@ main() {
 
 mactahoe_install() {
     local source icons_source share icon_share config_dir
-    apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support qt-style-kvantum libgtk-3-bin
+    apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support kwin-style-aurorae qt-style-kvantum libgtk-3-bin
     need_commands plasma-apply-lookandfeel kvantummanager gtk-update-icon-cache
     locked_download mactahoe "$WS_TMP/mactahoe.tar.gz"
     locked_download mactahoe_icons "$WS_TMP/mactahoe-icons.tar.gz"
@@ -101,6 +101,7 @@ mactahoe_install() {
     python3 "$WS_ROOT/tools/theme_assets.py" icons "$WS_TMP/icons" "$icon_share"
     sudo python3 "$WS_ROOT/tools/theme_assets.py" copy "$WS_TMP/greeter" /usr/share/sddm/themes/MacTahoe
     [[ -f $share/plasma/look-and-feel/com.github.vinceliuice.MacTahoe-Light/contents/layouts/org.kde.plasma.desktop-layout.js ]]
+    [[ -f $share/aurorae/themes/MacTahoe-Light/close.svg ]]
     [[ -f $icon_share/MacTahoe-light/index.theme ]]
     [[ -f $config_dir/Kvantum/MacTahoe/MacTahoe.kvconfig ]]
     kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light

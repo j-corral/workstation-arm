@@ -96,14 +96,18 @@ command_check required glab glab
 manual 'GitHub/GitLab authentication' 'gh auth login / glab auth login; authentication state intentionally not queried'
 section DEVELOPMENT
 command_check optional Zed zed
+manual 'Zed graphics' 'Zed requires a compatible Vulkan GPU. Run vulkaninfo --summary and vkcube in Plasma; use VS Code if the virtual GPU is unsupported.'
 command_check optional 'Visual Studio Code' code
 command_check optional 'JetBrains Toolbox' jetbrains-toolbox
 package_check Bruno bruno
 manual 'GUI compatibility' 'Open installed applications inside Plasma; command/package presence does not prove rendering or sandbox compatibility'
 section DESKTOP
-command_check optional Ghostty ghostty
+command_check optional Konsole konsole
 command_check optional KeePassXC keepassxc
-command_check optional Obsidian obsidian
+command_check optional Obsidian workstation-obsidian
+package_check ONLYOFFICE onlyoffice-desktopeditors
+package_check Solaar solaar
+manual 'Logitech devices' 'Attach receiver to the guest or pair over Bluetooth, then run solaar show.'
 package_check 'Proton Mail (automatic ARM64 install unsupported)' proton-mail
 section NETWORK
 command_check optional Tailscale tailscale

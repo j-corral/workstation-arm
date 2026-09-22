@@ -145,3 +145,15 @@ rejection of an escaping icon symlink. The pinned KDE archive was staged with
 `tools/theme_assets.py` locally. The icon build script uses GNU userland and
 has not been executed in the Ubuntu guest yet; the user must validate the
 result of `./bootstrap.sh --only kde` in Plasma.
+
+## MacTahoe window controls follow-up — 2026-09-22
+
+User screenshot showed the MacTahoe desktop layout but ordinary monochrome
+window controls on Dolphin. The repository's earlier Aurorae staging copied
+`icons-Light/*.svg` into an `icons-Light` subdirectory, while the audited
+upstream installer places `close.svg`, `minimize.svg` and `maximize.svg` beside
+`decoration.svg`. The script also omitted the Ubuntu `kwin-style-aurorae`
+package because APT runs without Recommends. Both are corrected. The actual
+pinned archive was staged again; `close.svg` is now at the expected root.
+Bash syntax, ShellCheck and 22 offline tests pass. A Plasma logout/login is
+still needed to validate the decoration in KWin on the guest.

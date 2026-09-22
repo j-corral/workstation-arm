@@ -76,7 +76,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Ubuntu Ghostty/KeePassXC, Obsidian ARM64 AppImage | Optional; Proton Mail skipped |
+| `desktop` | Transparent Konsole profile, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar | Optional; Proton Mail skipped |
 | `network` | Tailscale package and daemon | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages | AppArmor/updates required; OpenSnitch optional |
 | `ai` | Reports current model-free tooling blocker; **no download** | Manual |
@@ -313,8 +313,18 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   an installation error. A daemon failing to start is a real failure.
 - If an app is not found, open a fresh Zsh session. GUI launcher and shell PATH
   behavior differ. Normal tooling paths are included in the managed shell block.
-- If Zed fails, inspect `vulkaninfo --summary` in the desktop session. If Obsidian
-  or Bruno hits an AppArmor/Electron sandbox restriction, use vendor/IT guidance
+- If Zed reports an unsupported GPU, inspect `vulkaninfo --summary` and run
+  `vkcube` in Plasma. Zed requires Vulkan; when Parallels does not expose a
+  compatible device, use VS Code. Rerunning `--only dev` repairs Zed's desktop
+  icon but cannot add Vulkan support to the virtual GPU.
+- Konsole replaces Ghostty and uses a translucent Workstation profile.
+- Obsidian's desktop launcher now uses the extracted, pinned ARM64 AppImage to
+  avoid FUSE, installs Ubuntu's ARM64 `zlib1g-dev` for the upstream `libz.so`
+  dependency, and disables Electron GPU acceleration in a VM. If the previous
+  `~/.local/bin/obsidian` matches the bootstrap's pinned AppImage, it is kept
+  as a backup and the command is redirected to the new launcher. Its GUI still
+  needs a live check. If Obsidian or Bruno hits an AppArmor/Electron sandbox
+  restriction, use vendor/IT guidance
   for a scoped policy; do not disable AppArmor or pass `--no-sandbox` globally.
 - A checksum mismatch stops installation. Investigate changed vendor bytes,
   corruption or proxy behavior; never bypass the check. No downloaded binary is
@@ -329,7 +339,8 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   reviewing the proposed transaction. Review autoremove separately. Remove its
   `workstation-*.list` and key only when no remaining package needs that feed.
 - User tools installed here live under `~/.local/bin`; Zed also uses
-  `~/.local/zed.app`, Toolbox `~/.local/share/workstation-toolbox`. Remove only
+  `~/.local/zed.app`, Toolbox `~/.local/share/workstation-toolbox`, and Obsidian
+  `~/.local/share/workstation-obsidian`. Remove only
   the intended payload/symlink and its `workstation-*.desktop` launcher, after
   checking for user updates/data. Keep projects and app settings unless you
   explicitly intend to erase them. Remove only the delimited workstation block
@@ -419,3 +430,8 @@ A KDE-module rerun selects MacTahoe again without resetting the panels. French P
 independent of the theme: `/etc/default/keyboard`, the Xorg InputClass for SDDM,
 and the user's `kxkbrc` are all configured with `fr` and `pc105`; NumLock is set
 for SDDM and the next Plasma session. The installer reads back the Plasma keys.
+
+MacTahoe's colored window controls require Ubuntu's `kwin-style-aurorae`
+engine and the SVG button files in the root of the Aurorae theme directory.
+The KDE module installs both. After updating the repository and rerunning
+`./bootstrap.sh --only kde`, log out and back in so KWin reloads the decoration.

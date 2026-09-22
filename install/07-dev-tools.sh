@@ -8,17 +8,25 @@ code_install() {
 }
 zed_install() {
     apt_install libvulkan1 mesa-vulkan-drivers vulkan-tools xdg-desktop-portal-kde
-    if command -v zed >/dev/null; then zed --version; return; fi
-    locked_download zed "$WS_TMP/archive"
-    extract_archive "$WS_TMP/archive" "$WS_TMP/extracted"
-    elf_arm64 "$WS_TMP/extracted/zed.app/bin/zed"
-    [[ ! -e $HOME/.local/zed.app ]] || { fail 'Existing Zed directory without a working command; reconcile manually.'; return 1; }
-    install -d -m 0755 "$HOME/.local" "$HOME/.local/bin" "$HOME/.local/share/applications"
-    mv "$WS_TMP/extracted/zed.app" "$HOME/.local/zed.app"
-    ln -s "$HOME/.local/zed.app/bin/zed" "$HOME/.local/bin/zed"
-    python3 "$WS_ROOT/tools/desktop_entry.py" zed Zed "$HOME/.local/zed.app/bin/zed"
-    zed --version
-    manual Zed 'Test Vulkan 1.3 and portals inside Plasma/Parallels (vulkaninfo --summary). A binary install does not prove GPU compatibility.'
+    if [[ ! -x $HOME/.local/zed.app/bin/zed ]]; then
+        if command -v zed >/dev/null; then zed --version; manual Zed 'External installation retained; check its desktop icon and Vulkan support.'; return; fi
+        locked_download zed "$WS_TMP/archive"
+        extract_archive "$WS_TMP/archive" "$WS_TMP/extracted"
+        elf_arm64 "$WS_TMP/extracted/zed.app/bin/zed"
+        [[ ! -e $HOME/.local/zed.app ]] || { fail 'Existing Zed directory without a working command; reconcile manually.'; return 1; }
+        install -d -m 0755 "$HOME/.local" "$HOME/.local/bin"
+        mv "$WS_TMP/extracted/zed.app" "$HOME/.local/zed.app"
+        ln -s "$HOME/.local/zed.app/bin/zed" "$HOME/.local/bin/zed"
+    fi
+    if [[ ! -e $HOME/.local/bin/zed && ! -L $HOME/.local/bin/zed ]]; then
+        install -d -m 0755 "$HOME/.local/bin"
+        ln -s "$HOME/.local/zed.app/bin/zed" "$HOME/.local/bin/zed"
+    fi
+    local icon="$HOME/.local/zed.app/share/icons/hicolor/512x512/apps/zed.png"
+    [[ -f $icon ]] || { fail 'Zed archive is missing its desktop icon.'; return 1; }
+    python3 "$WS_ROOT/tools/desktop_entry.py" zed Zed "$HOME/.local/zed.app/bin/zed" "$icon"
+    "$HOME/.local/zed.app/bin/zed" --version
+    manual Zed 'Desktop icon installed. Check vulkaninfo --summary and vkcube in the guest. If Parallels offers no compatible Vulkan GPU, use VS Code; installing Zed cannot fix that.'
 }
 toolbox_install() {
     log WARN 'Toolbox ARM64 exists, but JetBrains currently lists Ubuntu 22.04/24.04, not 26.04. GUI compatibility remains unverified.'

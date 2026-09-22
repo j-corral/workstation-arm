@@ -11,6 +11,24 @@ spec.loader.exec_module(theme)
 
 
 class ThemeAssetsTests(unittest.TestCase):
+    def test_aurorae_buttons_are_next_to_decoration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            upstream = root / 'upstream/aurorae'
+            (upstream / 'MacTahoe-Light').mkdir(parents=True)
+            (upstream / 'MacTahoe-Light/decoration.svg').write_text('frame')
+            (upstream / 'icons-Light').mkdir()
+            for button in ('close', 'minimize', 'maximize'):
+                (upstream / 'icons-Light' / (button + '.svg')).write_text(button)
+            (upstream / 'Lightrc').write_text('LeftButtons=XIA')
+            for name in ('metadata.json', 'metadata.desktop'):
+                (upstream / name).write_text('theme_name')
+            target = root / 'installed/MacTahoe-Light'
+            theme.prepare_decoration(root / 'upstream', target)
+            for button in ('close', 'minimize', 'maximize'):
+                self.assertEqual((target / (button + '.svg')).read_text(), button)
+            self.assertFalse((target / 'icons-Light').exists())
+
     def test_icon_install_preserves_internal_links_and_other_theme(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()

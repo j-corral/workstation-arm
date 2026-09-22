@@ -1,19 +1,99 @@
 #!/usr/bin/env bash
-desktop_install() { apt_install ghostty keepassxc; need_commands ghostty keepassxc; }
-obsidian_install() {
-    apt_install libfuse2t64
-    if command -v obsidian >/dev/null; then
-        manual Obsidian 'Existing installation retained; validate the GUI and sandbox manually.'; return
+konsole_install() {
+    apt_install konsole libkf6config-bin
+    need_commands konsole kwriteconfig6 kreadconfig6
+    local directory="$HOME/.local/share/konsole" scheme="$HOME/.local/share/konsole/Workstation.colorscheme" profile="$HOME/.local/share/konsole/Workstation.profile"
+    install -d -m 0755 "$directory"
+    if [[ ! -e $scheme ]]; then
+        cat > "$scheme" <<'EOF'
+[Background]
+Color=22,27,35
+
+[Foreground]
+Color=231,238,247
+
+[General]
+Description=Workstation translucent
+Opacity=0.86
+Blur=true
+EOF
     fi
-    locked_download obsidian "$WS_TMP/Obsidian.AppImage"
-    elf_arm64 "$WS_TMP/Obsidian.AppImage"
-    install -d -m 0755 "$HOME/.local/bin"
-    install -m 0755 "$WS_TMP/Obsidian.AppImage" "$HOME/.local/bin/obsidian"
-    python3 "$WS_ROOT/tools/desktop_entry.py" obsidian Obsidian "$HOME/.local/bin/obsidian"
-    manual Obsidian 'Official ARM64 AppImage installed; test GUI. If AppArmor blocks Electron, seek a scoped IT-reviewed profile; do not disable sandbox/AppArmor.'
+    if [[ ! -e $profile ]]; then
+        cat > "$profile" <<'EOF'
+[Appearance]
+ColorScheme=Workstation
+
+[General]
+Name=Workstation
+Parent=FALLBACK/
+EOF
+    fi
+    local current_profile
+    current_profile=$(kreadconfig6 --file konsolerc --group 'Desktop Entry' --key DefaultProfile)
+    if [[ -z $current_profile || $current_profile == Workstation.profile ]]; then
+        kwriteconfig6 --file konsolerc --group 'Desktop Entry' --key DefaultProfile Workstation.profile
+    else
+        manual Konsole "Existing default profile $current_profile retained; select Workstation in Konsole if desired."
+    fi
+    manual Konsole 'Default Workstation profile enables a translucent background in Plasma; verify compositor rendering in the guest.'
+}
+onlyoffice_install() {
+    repository onlyoffice https://download.onlyoffice.com/repo/debian squeeze main https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE asc
+    apt_install onlyoffice-desktopeditors
+    need_commands desktopeditors
+    manual ONLYOFFICE 'Open a local DOCX, XLSX and PPTX in Plasma to validate the GUI and file associations.'
+}
+solaar_install() {
+    apt_install solaar
+    need_commands solaar
+    manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Keys S and MX Anywhere 2 settings depend on the detected HID++ features.'
+}
+keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
+obsidian_install() {
+    # The upstream ARM64 AppImage asks for the unversioned libz.so at load time.
+    # Ubuntu provides it in zlib1g-dev; zlib1g alone provides only libz.so.1.
+    apt_install zlib1g-dev
+    local image="$WS_TMP/Obsidian.AppImage" destination="$HOME/.local/share/workstation-obsidian" launcher="$HOME/.local/bin/workstation-obsidian" old="$HOME/.local/bin/obsidian" digest
+    if [[ -x $destination/AppRun ]]; then
+        :
+    else
+        locked_download obsidian "$image"
+        elf_arm64 "$image"
+        # Extraction uses the checksum-locked upstream AppImage and avoids FUSE at startup.
+        (cd "$WS_TMP" && "$image" --appimage-extract >/dev/null)
+        [[ -x $WS_TMP/squashfs-root/AppRun ]] || { fail 'Obsidian AppImage extraction did not produce AppRun.'; return 1; }
+        [[ ! -e $destination ]] || { fail 'Existing Obsidian payload needs reconciliation.'; return 1; }
+        install -d -m 0755 "$HOME/.local/share" "$HOME/.local/bin"
+        mv "$WS_TMP/squashfs-root" "$destination"
+    fi
+    cat > "$launcher" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+app="$HOME/.local/share/workstation-obsidian/AppRun"
+if command -v systemd-detect-virt >/dev/null && systemd-detect-virt --vm --quiet; then
+    exec "$app" --disable-gpu "$@"
+fi
+exec "$app" "$@"
+EOF
+    chmod 0755 "$launcher"
+    digest=$(python3 "$WS_ROOT/tools/artifacts.py" lookup "$WS_ROOT/config/downloads.json" obsidian | cut -f3)
+    if [[ -f $old && ! -L $old ]] && printf '%s  %s\n' "$digest" "$old" | sha256sum --check --status; then
+        [[ ! -e $destination/source.AppImage ]] || { fail 'Obsidian source backup already exists; reconcile manually.'; return 1; }
+        mv "$old" "$destination/source.AppImage"
+        ln -s "$launcher" "$old"
+    elif [[ ! -e $old && ! -L $old ]]; then
+        ln -s "$launcher" "$old"
+    elif [[ ! -L $old || $(readlink "$old") != "$launcher" ]]; then
+        manual Obsidian "Existing $old is not the bootstrap's pinned AppImage; it was retained. Use $launcher."
+    fi
+    python3 "$WS_ROOT/tools/desktop_entry.py" obsidian Obsidian "$launcher"
+    manual Obsidian 'ARM64 libz.so supplied, AppImage extracted to avoid FUSE, and VM launcher disables Electron GPU. GUI compatibility still requires a live launch. Existing vaults are untouched.'
 }
 main() {
-    component optional 'Ghostty and KeePassXC' desktop_install 'Native ARM64 packages from Ubuntu universe.'
-    component optional Obsidian obsidian_install 'Pinned official ARM64 AppImage and FUSE library; no alternate package format.'
+    component optional 'Konsole translucent terminal' konsole_install 'Native KDE terminal with a user-owned translucent profile; replaces Ghostty in the bootstrap.'
+    component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
+    component optional Obsidian obsidian_install 'Extract pinned official ARM64 AppImage; use software rendering in a VM.'
+    component optional ONLYOFFICE onlyoffice_install 'Official signed APT source, native ARM64 package, local Office files.'
+    component optional Solaar solaar_install 'Native ARM64 Ubuntu package for supported Logitech HID++ devices.'
     manual 'Proton Mail' 'Unsupported for automatic ARM64 installation: official Linux .deb inspected is amd64 (1.14.0). Use the web app manually.'
 }

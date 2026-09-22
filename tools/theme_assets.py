@@ -23,6 +23,21 @@ def copy(source, target):
         shutil.copy2(source, target)
 
 
+def prepare_decoration(source, decoration):
+    source, decoration = Path(source), Path(decoration)
+    name = 'MacTahoe-Light'
+    copy(source / 'aurorae' / name, decoration)
+    # Aurorae looks for close.svg/minimize.svg/maximize.svg next to
+    # decoration.svg. Upstream install.sh flattens icons-Light/*.svg here.
+    for icon in (source / 'aurorae/icons-Light').glob('*.svg'):
+        copy(icon, decoration / icon.name)
+    copy(source / 'aurorae/Lightrc', decoration / (name + 'rc'))
+    for filename in ('metadata.json', 'metadata.desktop'):
+        copy(source / 'aurorae' / filename, decoration / filename)
+        path = decoration / filename
+        path.write_text(path.read_text().replace('theme_name', name))
+
+
 def prepare(source, share, greeter, config):
     source, share, greeter, config = map(Path, (source, share, greeter, config))
     name = 'MacTahoe-Light'
@@ -37,13 +52,7 @@ def prepare(source, share, greeter, config):
         copy(source / 'wallpapers' / wallpaper, share / 'wallpapers' / wallpaper)
     copy(source / 'Kvantum/MacTahoe', config / 'Kvantum/MacTahoe')
     decoration = share / 'aurorae/themes' / name
-    copy(source / 'aurorae' / name, decoration)
-    copy(source / 'aurorae/icons-Light', decoration)
-    copy(source / 'aurorae/Lightrc', decoration / (name + 'rc'))
-    for filename in ('metadata.json', 'metadata.desktop'):
-        copy(source / 'aurorae' / filename, decoration / filename)
-        path = decoration / filename
-        path.write_text(path.read_text().replace('theme_name', name))
+    prepare_decoration(source, decoration)
     copy(source / 'sddm/MacTahoe-6.0', greeter)
     copy(source / 'sddm/images/Background-Light.jpeg', greeter / 'Background.jpeg')
     copy(source / 'sddm/images/Preview-Light.jpeg', greeter / 'Preview.jpeg')
