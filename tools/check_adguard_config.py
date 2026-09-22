@@ -10,12 +10,13 @@ gateway = sys.argv[2] if len(sys.argv) > 2 else ''
 dns = config.get('dns', {})
 expected = ['127.0.0.1'] + ([gateway] if gateway else [])
 checks = {
+    'Current configuration schema': config.get('schema_version') == 25,
     'DNS listeners': dns.get('bind_hosts') == expected,
     'DNS port': dns.get('port') == 53,
     'Quad9 DoT only': dns.get('upstream_dns') == ['tls://dns.quad9.net'],
     'Secure bootstrap only': dns.get('bootstrap_dns') == ['9.9.9.9', '149.112.112.112'],
     'No fallback': not dns.get('fallback_dns') and not dns.get('upstream_dns_file'),
-    'No ECS': dns.get('edns_client_subnet', {}).get('enabled') is False,
+    'No ECS': dns.get('edns_client_subnet', {}).get('enabled') is False and dns.get('edns_client_subnet', {}).get('use_custom') is False,
     'No extra DNSSEC validation': dns.get('enable_dnssec') is False,
     'Private admin UI': config.get('http', {}).get('address') == '127.0.0.1:3000',
     'No query log': config.get('querylog', {}).get('enabled') is False and config.get('querylog', {}).get('file_enabled') is False,

@@ -23,6 +23,7 @@ class LocalDnsTests(unittest.TestCase):
     def test_secure_initial_configuration(self):
         config = yaml.safe_load(TEMPLATE.read_text())
         self.assertEqual(self.check(config).returncode, 0)
+        self.assertEqual(config['schema_version'], 25)
         self.assertEqual(json.loads((ROOT / 'config/downloads.json').read_text())['adguard_home']['version'], 'v0.107.79')
         self.assertIn('DNS=127.0.0.1', (ROOT / 'config/adguard-resolved.conf').read_text())
         self.assertIn('Domains=~.', (ROOT / 'config/adguard-resolved.conf').read_text())
