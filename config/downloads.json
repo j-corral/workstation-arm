@@ -1,4 +1,11 @@
 {
+  "adguard_home": {
+    "version": "v0.107.79",
+    "url": "https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.79/AdGuardHome_linux_arm64.tar.gz",
+    "algorithm": "sha256",
+    "digest": "3f7893c18e8aaadc456d0452839190561c306ca95175a2254958be80a769c1ae",
+    "evidence": "https://github.com/AdguardTeam/AdGuardHome/releases/expanded_assets/v0.107.79"
+  },
   "mise": {
     "version": "v2026.9.12",
     "url": "https://github.com/jdx/mise/releases/download/v2026.9.12/mise-v2026.9.12-linux-arm64.tar.gz",

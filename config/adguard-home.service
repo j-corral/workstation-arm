@@ -1,0 +1,23 @@
+[Unit]
+Description=Workstation AdGuard Home DNS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=workstation-adguard
+Group=workstation-adguard
+WorkingDirectory=/var/lib/workstation-adguard
+ExecStart=/opt/workstation-adguard/AdGuardHome --no-check-update -c /etc/workstation-adguard/AdGuardHome.yaml -w /var/lib/workstation-adguard
+Restart=on-failure
+RestartSec=3
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/workstation-adguard /etc/workstation-adguard
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

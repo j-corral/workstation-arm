@@ -180,7 +180,7 @@ touch "$WS_TEST_DIR/executed"
 
     def test_locks_have_explicit_architecture_and_digest(self):
         locks = json.loads((ROOT / 'config/downloads.json').read_text())
-        self.assertEqual(len(locks), 10)
+        self.assertEqual(len(locks), 11)
         for item in locks.values():
             self.assertTrue(item['url'].startswith('https://'))
             if item.get('architecture') == 'all':

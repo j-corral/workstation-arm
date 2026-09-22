@@ -3,14 +3,15 @@ set -uo pipefail
 # Read-only by default. Explicit network tests are opt-in and never logged to disk.
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
-hello=0 link=0 quad9=0 lm_host='' failures=0
+hello=0 link=0 quad9=0 dns_status=0 lm_host='' failures=0
 while (( $# )); do
     case $1 in
         --docker-hello) hello=1 ;;
         --quad9) quad9=1 ;;
+        --dns-status) dns_status=1 ;;
         --lm-link) link=1 ;;
         --lm-host) [[ $# -ge 2 ]] || { printf 'Missing URL after --lm-host\n' >&2; exit 2; }; lm_host=$2; shift ;;
-        --help|-h) printf 'Usage: ./verify.sh [--docker-hello] [--quad9] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
+        --help|-h) printf 'Usage: ./verify.sh [--dns-status] [--docker-hello] [--quad9] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
         *) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift
@@ -122,11 +123,18 @@ else warn 'Spotify Web' 'application launcher absent'; fi
 manual 'Logitech devices' 'Attach receiver to the guest or pair over Bluetooth, then run solaar show.'
 package_check 'Proton Mail (automatic ARM64 install unsupported)' proton-mail
 section NETWORK
+if (( dns_status )); then bash "$(dirname -- "$0")/tools/dns_status.sh"; fi
+if [[ -f /etc/systemd/resolved.conf.d/70-workstation-adguard.conf ]]; then
+    if cmp -s /etc/systemd/resolved.conf.d/70-workstation-adguard.conf "$(dirname -- "$0")/config/adguard-resolved.conf"; then
+        ok 'AdGuard Home + Quad9' 'managed local resolver configuration present; use --dns-status for live diagnostic'
+    else bad 'AdGuard Home + Quad9' 'managed resolver configuration differs'; fi
+else
 if [[ -f /etc/systemd/resolved.conf.d/60-workstation-quad9.conf ]]; then
     if cmp -s /etc/systemd/resolved.conf.d/60-workstation-quad9.conf "$(dirname -- "$0")/config/quad9-resolved.conf"; then
         ok 'Quad9 Secure DoT' 'managed systemd-resolved configuration present; use --quad9 for a live check'
     else bad 'Quad9 Secure DoT' 'managed resolver configuration differs from repository'; fi
 else warn 'Quad9 Secure DoT' 'not configured'; fi
+fi
 if (( quad9 )); then
     if command -v resolvectl >/dev/null && timeout 15 resolvectl query -t TXT proto.on.quad9.net 2>/dev/null | grep -Eq '(^|[^a-z])dot\.'; then
         ok 'Quad9 live protocol' 'Quad9 reports DNS-over-TLS'

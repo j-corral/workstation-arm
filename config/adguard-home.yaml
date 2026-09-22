@@ -1,0 +1,38 @@
+# Managed initial state only. On reruns the installed configuration is preserved.
+http:
+  address: 127.0.0.1:3000
+users: [] # The web UI is bound to VM loopback only.
+dns:
+  bind_hosts:
+  - 127.0.0.1
+  port: 53
+  upstream_dns:
+  - tls://dns.quad9.net
+  bootstrap_dns:
+  - 9.9.9.9
+  - 149.112.112.112
+  fallback_dns: []
+  enable_dnssec: false # Quad9 Secure validates; do not validate twice.
+  edns_client_subnet:
+    enabled: false
+  use_private_ptr_resolvers: false
+  cache_optimistic: false
+filtering:
+  protection_enabled: true
+  filtering_enabled: true
+  safe_browsing_enabled: false
+  parental_enabled: false
+querylog:
+  enabled: false
+  file_enabled: false
+statistics:
+  enabled: false
+filters:
+- enabled: true
+  url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
+  name: AdGuard DNS filter
+  id: 1
+whitelist_filters: []
+user_rules: []
+dhcp:
+  enabled: false
