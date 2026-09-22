@@ -1,5 +1,17 @@
 # Validation record — 2026-09-21
 
+## Local DNS addition — 2026-09-22
+
+The new local AdGuard Home/Quad9 DoT path was reviewed against current official
+AdGuard Home, Quad9, Docker and Ubuntu resolver documentation. On the macOS
+development host, `bash tests/run.sh` passed Bash syntax, ShellCheck and 26
+offline tests, including new configuration-policy and Docker-gateway tests.
+The official AdGuard Home v0.107.79 ARM64 digest is pinned from its release
+assets, but the archive could not be downloaded in this host environment and
+the VM installer has **not** been executed here. Runtime DNS, container and
+rollback tests are therefore pending a native Ubuntu 26.04 ARM64 run. The
+installer performs those checks and restores its snapshot on failure.
+
 ## Follow-up — 2026-09-22
 
 The user supplied a native Ubuntu 26.04 ARM64 installation transcript. Base

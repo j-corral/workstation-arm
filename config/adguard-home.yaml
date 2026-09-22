@@ -12,7 +12,7 @@ dns:
   - 9.9.9.9
   - 149.112.112.112
   fallback_dns: []
-  enable_dnssec: false # Quad9 Secure validates; do not validate twice.
+  enable_dnssec: false # Quad9 Secure validates; no extra DNSSEC request flag needed here.
   edns_client_subnet:
     enabled: false
   use_private_ptr_resolvers: false

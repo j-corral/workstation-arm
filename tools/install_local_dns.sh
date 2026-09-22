@@ -43,7 +43,9 @@ source /etc/os-release
 command -v dig >/dev/null && command -v ss >/dev/null && command -v ip >/dev/null
 systemctl is-active --quiet systemd-resolved.service || { report 'systemd-resolved must be active.'; exit 1; }
 [[ -L /etc/resolv.conf && $(readlink -f /etc/resolv.conf) == /run/systemd/resolve/stub-resolv.conf ]] || { report 'Unexpected /etc/resolv.conf; expected systemd-resolved stub symlink. No changes made.'; exit 1; }
-[[ ! -e /etc/systemd/resolved.conf.d/70-workstation-adguard.conf || ! -L /etc/systemd/resolved.conf.d/70-workstation-adguard.conf ]] || { report 'Refusing symlinked managed resolver config.'; exit 1; }
+for path in /etc/systemd/resolved.conf.d/60-workstation-quad9.conf /etc/systemd/resolved.conf.d/70-workstation-adguard.conf /etc/workstation-adguard/AdGuardHome.yaml /etc/systemd/system/AdGuardHome.service /opt/workstation-adguard/AdGuardHome /etc/docker/daemon.json; do
+    [[ ! -L $path ]] || { report "Refusing symlinked managed path: $path"; exit 1; }
+done
 if [[ -e /etc/systemd/resolved.conf.d/60-workstation-quad9.conf ]] && ! cmp -s "$root/config/quad9-resolved.conf" /etc/systemd/resolved.conf.d/60-workstation-quad9.conf; then report 'Existing Quad9 config differs; reconcile manually.'; exit 1; fi
 if [[ -e /etc/systemd/resolved.conf.d/70-workstation-adguard.conf ]] && ! cmp -s "$root/config/adguard-resolved.conf" /etc/systemd/resolved.conf.d/70-workstation-adguard.conf; then report 'Existing AdGuard resolver config differs; reconcile manually.'; exit 1; fi
 if [[ -e /etc/systemd/system/AdGuardHome.service ]] && ! cmp -s "$root/config/adguard-home.service" /etc/systemd/system/AdGuardHome.service; then report 'Existing AdGuardHome service is unmanaged; refusing overwrite.'; exit 1; fi

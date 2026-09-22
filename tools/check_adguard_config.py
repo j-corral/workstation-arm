@@ -21,6 +21,7 @@ checks = {
     'No query log': config.get('querylog', {}).get('enabled') is False and config.get('querylog', {}).get('file_enabled') is False,
     'No statistics': config.get('statistics', {}).get('enabled') is False,
     'Filtering enabled': config.get('filtering', {}).get('filtering_enabled') is True,
+    'No client upstream bypass': all(not client.get('upstreams') for client in config.get('clients', {}).get('persistent', [])),
 }
 for host in dns.get('bind_hosts', []):
     if not ipaddress.ip_address(host).is_private:

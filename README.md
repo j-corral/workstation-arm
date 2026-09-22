@@ -92,6 +92,13 @@ statistics are disabled. If Docker is active, AdGuard also listens on the
 installer refuses to restart Docker while containers are running. It leaves
 project/Compose settings untouched. Run `sudo ./tools/dns_status.sh` for a
 read-only report or `./verify.sh --dns-status` for the user-level view.
+Add local exceptions in AdGuard's web UI (Filters → Custom filtering rules,
+for example `@@||needed.example^`) or add further filter URLs to `filters` in
+`/etc/workstation-adguard/AdGuardHome.yaml` while the service is stopped.
+The installer preserves these rules on reruns. Only the AdGuard DNS filter is
+enabled initially; Quad9 supplies the threat list. TCP 853 to Quad9 must be
+reachable; the installer adds no new firewall and does not globally block port
+53, which could disrupt a future VPN.
 
 The installer saves every managed file (including the resolver symlink) under
 `/var/lib/workstation/dns-backups/` and restores it automatically if a live
