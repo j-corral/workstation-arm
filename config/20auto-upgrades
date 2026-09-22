@@ -1,0 +1,3 @@
+// Managed by workstation bootstrap; Ubuntu's normal unattended-upgrades policy.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";

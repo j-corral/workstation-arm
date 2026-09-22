@@ -1,0 +1,58 @@
+{
+  "mise": {
+    "version": "v2026.9.12",
+    "url": "https://github.com/jdx/mise/releases/download/v2026.9.12/mise-v2026.9.12-linux-arm64.tar.gz",
+    "algorithm": "sha256",
+    "digest": "e4a0921da0a76ce4666832d5b57b6f0eb9f22d149ba92845ebae4c38638c6775",
+    "evidence": "https://api.github.com/repos/jdx/mise/releases/tags/v2026.9.12"
+  },
+  "uv": {
+    "version": "0.12.17",
+    "url": "https://github.com/astral-sh/uv/releases/download/0.12.17/uv-aarch64-unknown-linux-gnu.tar.gz",
+    "algorithm": "sha256",
+    "digest": "d636d1b678e9e7f367ecb22b46bd1cabbed234d6bc3b4d96365d2b507f72f86c",
+    "evidence": "https://api.github.com/repos/astral-sh/uv/releases/tags/0.12.17"
+  },
+  "bun": {
+    "version": "bun-v1.4.2",
+    "url": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-linux-aarch64.zip",
+    "algorithm": "sha256",
+    "digest": "54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7",
+    "evidence": "https://api.github.com/repos/oven-sh/bun/releases/tags/bun-v1.4.2"
+  },
+  "zed": {
+    "version": "v1.20.2",
+    "url": "https://github.com/zed-industries/zed/releases/download/v1.20.2/zed-linux-aarch64.tar.gz",
+    "algorithm": "sha256",
+    "digest": "715a5252234522bc9e8e4a8c1f9b462cf7bb2881eed23b7c8ae650b41c24aa6f",
+    "evidence": "https://api.github.com/repos/zed-industries/zed/releases/tags/v1.20.2"
+  },
+  "lazydocker": {
+    "version": "v0.25.2",
+    "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Linux_arm64.tar.gz",
+    "algorithm": "sha256",
+    "digest": "005c38b685aaa557e7d646d83a3dadb5024340eeed8c6a2e1949eee6f530de23",
+    "evidence": "https://api.github.com/repos/jesseduffield/lazydocker/releases/tags/v0.25.2"
+  },
+  "bruno": {
+    "version": "v4.1.0",
+    "url": "https://github.com/usebruno/bruno/releases/download/v4.1.0/bruno_4.1.0_arm64_linux.deb",
+    "algorithm": "sha256",
+    "digest": "bda69398c266353452911cbac87b86ef5c6de8f2efd0f5c234d88afaf1e11363",
+    "evidence": "https://api.github.com/repos/usebruno/bruno/releases/tags/v4.1.0"
+  },
+  "obsidian": {
+    "version": "v1.13.7",
+    "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.7/Obsidian-1.13.7-arm64.AppImage",
+    "algorithm": "sha256",
+    "digest": "e286fd2bb2a5d346a35a577bd764c73fd5537dddec2b99a1a3e5e35974085203",
+    "evidence": "https://api.github.com/repos/obsidianmd/obsidian-releases/releases/tags/v1.13.7"
+  },
+  "toolbox": {
+    "version": "3.8.1.88030",
+    "url": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.8.1.88030-arm64.tar.gz",
+    "algorithm": "sha256",
+    "digest": "47dd2a112b2e169a072de01abc482a6a6341fcf8ce14acb62f7713963e78833e",
+    "evidence": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.8.1.88030-arm64.tar.gz.sha256"
+  }
+}
