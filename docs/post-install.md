@@ -1,7 +1,7 @@
 
 Post-install manual checklist (only for applicable installed components):
-[ ] Reboot if required; select Plasma (prefer Wayland) at login
-[ ] Choose SDDM with sudo dpkg-reconfigure sddm if desired
+[ ] Reboot after the KDE module; SDDM and Plasma Wayland are selected automatically
+[ ] Sign in normally and confirm the Plasma desktop opens
 [ ] After reboot, confirm French PC AZERTY and NumLock in Plasma; test the login screen separately
 [ ] Test Parallels graphics/resolution and Zed Vulkan support
 [ ] Generate a dedicated passphrase-protected client SSH key

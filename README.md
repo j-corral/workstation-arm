@@ -173,9 +173,10 @@ host settings, host firewall rules, bridged interfaces or host networking.
 Use the full [post-install checklist](docs/post-install.md), also printed at the
 end of a real run. In particular:
 
-- Reboot when Ubuntu requests it; log out for the Zsh change. Select Plasma
-  Wayland at login. SDDM is installed without replacing/restarting an active
-  display manager; `sudo dpkg-reconfigure sddm` lets you choose it. GNOME remains.
+- Reboot after the KDE module: SDDM is automatically selected as the boot
+  display manager and Plasma Wayland is preselected at login. Sign in normally.
+  The running session is not restarted; GNOME remains available as another session.
+  Each rerun of the KDE module restores this boot/session preference.
 - Test resolution, scaling, suspend and Vulkan under Parallels. If necessary,
   Ubuntu's `plasma-session-x11` is an available manual fallback:
   `sudo apt-get install plasma-session-x11`. No unsupported graphics stack is added.
@@ -351,12 +352,15 @@ preference. NumLock is enabled when the next Plasma session starts, including
 Wayland; no `numlockx` autostart is needed.
 
 After updating the repository in the guest, run `./bootstrap.sh --only kde`,
-then reboot and select Plasma. The same configuration is included in a full run.
+then reboot and sign in to the preselected Plasma session. The same configuration is included in a full run.
 Existing GNOME input-source preferences are separate and are not configured.
 SDDM gets `/etc/sddm.conf.d/90-workstation-keyboard.conf` with `Numlock=on` for
 its X11 greeter. A Wayland greeter needs compositor-specific configuration;
-`/etc/sddm.conf` or a later drop-in may override this setting. The script does
-not switch or restart the active display manager.
+`/etc/sddm.conf` or a later drop-in may override this setting. The script selects SDDM for the next boot without restarting the running
+display manager. It updates the Debian display-manager selection, enables the
+SDDM systemd alias and graphical boot target, and seeds SDDM’s last-session
+preference with the installed Plasma Wayland session filename. It does not
+enable automatic login. Later manual session choices are remembered by SDDM.
 
 References: [Plasma keyboard schema](https://raw.githubusercontent.com/KDE/plasma-desktop/Plasma/6.6/kcms/keyboard/keyboardsettings.kcfg),
 [KWin NumLock handling](https://raw.githubusercontent.com/KDE/kwin/Plasma/6.6/src/xkb.cpp),

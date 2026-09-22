@@ -84,3 +84,17 @@ New tests cover preservation of unrelated system keyboard settings and file
 mode, duplicate-key removal, missing keys, idempotency and symlink refusal.
 No guest execution was available: console cache generation, Plasma startup,
 physical keypad behavior and SDDM must still be checked after a VM reboot.
+
+## Automatic Plasma login selection — 2026-09-22
+
+The KDE module selects SDDM for the next graphical boot and seeds the installed
+Plasma Wayland session in SDDM's state file, without enabling autologin or issuing
+service start/stop/restart commands. Bash syntax checks, ShellCheck and all 15
+offline tests pass. New mocked-command tests check boot/session selection and
+that a missing Plasma session prevents changes to the display manager.
+Actual reboot, SDDM startup and Plasma login still require guest validation.
+
+Implementation references:
+- [Debian SDDM display-manager selection](https://sources.debian.org/src/sddm/0.21.0%2Bgit20250502.4fe234b-2/debian/sddm.postinst)
+- [SDDM last-session state](https://github.com/sddm/sddm/blob/v0.21.0/src/common/Configuration.h)
+- [SDDM session preselection](https://github.com/sddm/sddm/blob/v0.21.0/src/greeter/SessionModel.cpp)
