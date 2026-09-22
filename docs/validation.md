@@ -12,6 +12,10 @@ the VM installer has **not** been executed here. Runtime DNS, container and
 rollback tests are therefore pending a native Ubuntu 26.04 ARM64 run. The
 installer performs those checks and restores its snapshot on failure.
 
+Ubuntu 26.04 exposes `dnsutils` as a virtual package without an APT candidate.
+The network module therefore installs the concrete ARM64 `bind9-dnsutils`
+package, which supplies `dig` for the DNS checks.
+
 ## Follow-up — 2026-09-22
 
 The user supplied a native Ubuntu 26.04 ARM64 installation transcript. Base

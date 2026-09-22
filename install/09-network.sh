@@ -8,7 +8,8 @@ tailscale_install() {
     manual Tailscale 'Only if authorized by client IT: sudo tailscale up --accept-routes=false --accept-dns=false. No authentication or routes configured by bootstrap.'
 }
 quad9_dot_install() {
-    apt_install dnsutils python3-yaml
+    # Ubuntu 26.04 exposes dnsutils as a virtual package; bind9-dnsutils owns dig.
+    apt_install bind9-dnsutils python3-yaml
     need_commands resolvectl dig ss ip
     locked_download adguard_home "$WS_TMP/adguard.tar.gz"
     extract_archive "$WS_TMP/adguard.tar.gz" "$WS_TMP/adguard"
