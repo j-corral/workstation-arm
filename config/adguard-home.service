@@ -8,7 +8,8 @@ Type=simple
 User=workstation-adguard
 Group=workstation-adguard
 WorkingDirectory=/var/lib/workstation-adguard
-ExecStart=/opt/workstation-adguard/AdGuardHome --no-check-update -c /etc/workstation-adguard/AdGuardHome.yaml -w /var/lib/workstation-adguard
+# AdGuard's service mode stays in the foreground for systemd supervision.
+ExecStart=/opt/workstation-adguard/AdGuardHome -s run --no-check-update -c /etc/workstation-adguard/AdGuardHome.yaml -w /var/lib/workstation-adguard
 Restart=on-failure
 RestartSec=3
 AmbientCapabilities=CAP_NET_BIND_SERVICE

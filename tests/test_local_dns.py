@@ -47,3 +47,7 @@ class LocalDnsTests(unittest.TestCase):
         script = (ROOT / 'tools/dns_status.sh').read_text()
         self.assertIn('ready<15', script)
         self.assertLess(script.index('ready<15'), script.index('systemctl is-active --quiet AdGuardHome.service'))
+
+    def test_service_uses_adguard_foreground_service_mode(self):
+        service = (ROOT / 'config/adguard-home.service').read_text()
+        self.assertIn('AdGuardHome -s run', service)
