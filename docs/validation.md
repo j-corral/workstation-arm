@@ -1,5 +1,24 @@
 # Validation record — 2026-09-21
 
+## Follow-up — 2026-09-22
+
+The user supplied a native Ubuntu 26.04 ARM64 installation transcript. Base
+system, KDE, Zsh, Git/SSH, system Python, mise, uv, Bun and .NET 10 passed their
+component checks. This is partial guest evidence, not GUI or full-run acceptance.
+Docker stopped before repository setup: the name-filtered
+`systemctl list-unit-files docker.service --no-legend` returned 1 on this clean
+guest. The strict runner correctly stopped, but the presence check was wrong.
+
+The Docker guard now lists service units without a name filter and examines
+Docker only if present. Actual listing/inspection errors still fail, and existing
+TCP listeners remain rejected. Bash syntax, ShellCheck and all 11 offline tests
+pass, including absent/existing Docker units, TCP rejection and systemctl errors.
+The fix has not yet been rerun in the user's guest; later modules remain untested
+there. The earlier Rosetta-triggered awk failure also has a prerequisite probe
+and regression test.
+
+## Original host validation
+
 Validation ran on the development macOS host. No Linux installer or downloaded
 Linux executable was executed there. Ubuntu/Parallels guest installation acceptance testing was not performed.
 

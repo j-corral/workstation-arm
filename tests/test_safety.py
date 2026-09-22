@@ -19,6 +19,40 @@ spec.loader.exec_module(blocks)
 
 
 class SafetyTests(unittest.TestCase):
+    def test_docker_systemd_absence_is_not_an_error(self):
+        script = '''
+set -Eeuo pipefail
+source "$WS_ROOT/lib/logging.sh"
+source "$WS_ROOT/install/06-docker.sh"
+fail() { log ERROR "$*"; return 1; }
+systemctl() {
+    case "$1" in
+        list-unit-files)
+            # Simulate the observed failure for the old, name-filtered query.
+            [[ $2 != docker.service ]] || return 1
+            [[ $WS_CASE != list_error ]] || return 5
+            if [[ $WS_CASE == absent ]]; then
+                printf 'ssh.service disabled disabled\\n'
+            else
+                printf 'docker.service enabled enabled\\n'
+            fi ;;
+        show)
+            [[ $WS_CASE != absent ]] || return 99
+            [[ $WS_CASE != show_error ]] || return 6
+            if [[ $WS_CASE == tcp ]]; then printf 'dockerd -H tcp://0.0.0.0:2375\\n';
+            else printf 'dockerd -H fd://\\n'; fi ;;
+        *) return 98 ;;
+    esac
+}
+docker_check_systemd
+printf 'CONTINUED'
+'''
+        for case, expected in [('absent', 0), ('existing', 0), ('tcp', 1), ('list_error', 5), ('show_error', 6)]:
+            env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='', WS_CASE=case)
+            result = subprocess.run(['bash', '-c', script], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, expected, (case, result.stdout, result.stderr))
+            self.assertEqual('CONTINUED' in result.stdout, expected == 0)
+
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
         script = '''

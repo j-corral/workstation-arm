@@ -10,8 +10,9 @@ installation is deliberately blocked. Proton Mail's inspected Linux package is
 amd64. Proton VPN setup is manual because its official support targets GNOME.
 Toolbox has an ARM64 build, but does not list Ubuntu 26.04 among tested releases.
 
-This repository has been statically checked and tested offline on macOS; it has
-**not** been installed or validated end to end in a Parallels Ubuntu guest.
+This repository has been statically checked and tested offline on macOS. A user
+run on Ubuntu 26.04 ARM64 passed through .NET installation, then exposed a Docker
+preflight bug now corrected locally. **End-to-end guest validation is pending.**
 Do not interpret a package/binary check as GUI, graphics, VPN or inference proof.
 See the [validation record and guest acceptance procedure](docs/validation.md).
 
