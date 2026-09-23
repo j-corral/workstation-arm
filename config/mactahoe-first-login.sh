@@ -71,6 +71,29 @@ configure_selected_dock_launchers() {
     kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --group Applets --group "$dock_applet" --group Configuration --group General --key launchers "$joined"
 }
 
+configure_start_launcher_icon() {
+    local applets="$config_dir/plasma-org.kde.plasma.desktop-appletsrc"
+    [[ -r $applets ]] || return 0
+
+    local containment='' applet='' line launcher_containment='' launcher_applet=''
+    while IFS= read -r line; do
+        if [[ $line =~ ^\[Containments\]\[([0-9]+)\]\[Applets\]\[([0-9]+)\]$ ]]; then
+            containment=${BASH_REMATCH[1]}
+            applet=${BASH_REMATCH[2]}
+        elif [[ $line == 'plugin=org.kde.plasma.kickoff' || $line == 'plugin=org.kde.plasma.kicker' || $line == 'plugin=org.kde.plasma.applicationlauncher' ]]; then
+            launcher_containment=$containment
+            launcher_applet=$applet
+            break
+        fi
+    done < "$applets"
+    [[ -n $launcher_containment && -n $launcher_applet ]] || return 0
+
+    # view-grid is a neutral, bundled symbol.  It does not imitate a vendor
+    # logo and remains available when the icon theme falls back to Breeze.
+    kwriteconfig6 --file "$applets" --group Containments --group "$launcher_containment" --group Applets --group "$launcher_applet" --group Configuration --group General --key icon view-grid
+}
+
 # The layout is applied once; the selected launchers are reconciled at each
 # Plasma login so rerunning the configurator changes the dock without a reset.
 configure_selected_dock_launchers
+configure_start_launcher_icon

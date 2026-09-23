@@ -62,6 +62,8 @@ class ThemeLayoutTests(unittest.TestCase):
             (config / 'plasma-org.kde.plasma.desktop-appletsrc').write_text(
                 '[Containments][7][Applets][12]\n'
                 'plugin=org.kde.plasma.icontasks\n'
+                '[Containments][7][Applets][13]\n'
+                'plugin=org.kde.plasma.kickoff\n'
             )
             share = home / '.local/share'
             layout = share / 'plasma/look-and-feel/com.github.vinceliuice.MacTahoe-Light/contents/layouts/org.kde.plasma.desktop-layout.js'
@@ -78,7 +80,7 @@ class ThemeLayoutTests(unittest.TestCase):
             (bin_dir / 'kreadconfig6').write_text(
                 '#!/bin/sh\nprintf "%s" "applications:org.kde.dolphin.desktop,applications:bruno.desktop"\n'
             )
-            (bin_dir / 'kwriteconfig6').write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$TEST_WRITE"\n')
+            (bin_dir / 'kwriteconfig6').write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$TEST_WRITE"\n')
             (bin_dir / 'kreadconfig6').chmod(0o755)
             (bin_dir / 'kwriteconfig6').chmod(0o755)
             result = subprocess.run(
@@ -93,3 +95,4 @@ class ThemeLayoutTests(unittest.TestCase):
             self.assertNotIn('applications:bruno.desktop', write)
             self.assertIn('applications:md.obsidian.Obsidian.desktop', write)
             self.assertIn('applications:com.bitwarden.desktop', write)
+            self.assertIn('--key icon view-grid', write)
