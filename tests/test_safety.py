@@ -131,8 +131,9 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn('gpasswd -d "$current" sudo', accounts)
         self.assertIn("su - root -c 'id -u'", accounts)
         self.assertIn('schedule_rename "$current" "$daily"', accounts)
-        self.assertIn('will keep: docker, lazydocker', accounts)
-        self.assertIn('CONFIRM_REMOVE_SUDO', accounts)
+        self.assertIn('keeps docker and lazydocker', accounts)
+        self.assertNotIn('CONFIRM_REMOVE_SUDO', accounts)
+        self.assertIn('then loses sudo', accounts)
         self.assertLess(accounts.index('schedule_rename "$current" "$daily"'), accounts.index('gpasswd -d "$current" sudo'))
 
     def test_configurator_controls_requested_optional_components(self):

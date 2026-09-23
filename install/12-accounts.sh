@@ -31,11 +31,7 @@ accounts_harden() {
     [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; daily privileges were not changed.'; return 1; }
     getent group docker >/dev/null || { fail 'Docker must be installed before account configuration.'; return 1; }
     sudo usermod -aG docker "$current"
-    printf '\nYour normal account will keep: docker, lazydocker.\n'
-    printf 'Your normal account will lose only: sudo.\n'
-    printf 'Type CONFIRM_REMOVE_SUDO to continue: '
-    read -r answer
-    [[ $answer == CONFIRM_REMOVE_SUDO ]] || { fail 'Account configuration cancelled; sudo access remains unchanged.'; return 1; }
+    printf '\nThe normal account keeps docker and lazydocker, then loses sudo.\n'
     # Install and enable the root-owned first-boot rename before revoking the
     # current account's sudo privilege.
     if [[ $daily != "$current" ]]; then schedule_rename "$current" "$daily"; fi
