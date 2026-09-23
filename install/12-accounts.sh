@@ -38,6 +38,8 @@ accounts_harden() {
     configure_password_keyboard
     printf '\nFrench PC AZERTY (fr/pc105) is configured. Set the root password now.\n'
     sudo passwd root
+    printf '\nSet the normal desktop account password now.\n'
+    sudo passwd "$current"
     [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; daily privileges were not changed.'; return 1; }
     getent group docker >/dev/null || { fail 'Docker must be installed before account configuration.'; return 1; }
     sudo usermod -aG docker "$current"

@@ -41,19 +41,53 @@ elf_arm64() { python3 "$WS_ROOT/tools/artifacts.py" elf "$1"; }
 extract_archive() { python3 "$WS_ROOT/tools/artifacts.py" extract "$1" "$2"; }
 managed_block() { python3 "$WS_ROOT/tools/managed_block.py" "$1" "$2" "$3"; }
 configure_optional_components() {
-    local config="$HOME/.config/workstation/components.conf" choices tag
+    local scope=${1:-all} config="$HOME/.config/workstation/components.conf" areas='' choices='' tag
+    [[ $scope == accounts ]] && return
     [[ -f $config && ${WS_CONFIGURE:-0} != 1 ]] && { WS_COMPONENTS=$config; export WS_COMPONENTS; return; }
     install -d -m 0700 "$(dirname "$config")"
     component_default() { [[ -f $config ]] && grep -qx "$1=1" "$config" && printf ON || printf OFF; }
+    saved_value() { grep -E "^$1=" "$config" 2>/dev/null | tail -n 1 || printf '%s=0\n' "$1"; }
+    category_default() {
+        local prefix
+        case $1 in desktop) prefix=desktop_ ;; ai) prefix=ai_ ;; git) prefix=git_ ;; esac
+        [[ -f $config ]] && grep -Eq "^${prefix}.*=1$" "$config" && printf ON || printf OFF
+    }
     if [[ -t 0 && -t 1 ]] && command -v whiptail >/dev/null; then
-        choices=$(whiptail --title 'Workstation configuration' --checklist 'Select optional components' 20 78 10 \
-          desktop_onlyoffice 'ONLYOFFICE' "$(component_default desktop_onlyoffice)" desktop_obsidian 'Obsidian' "$(component_default desktop_obsidian)" desktop_bruno 'Bruno' "$(component_default desktop_bruno)" desktop_solaar 'Solaar' "$(component_default desktop_solaar)" desktop_bitwarden 'Bitwarden' "$(component_default desktop_bitwarden)" ai_codex 'Codex CLI' "$(component_default ai_codex)" ai_claude 'Claude Code' "$(component_default ai_claude)" git_github 'GitHub CLI' "$(component_default git_github)" git_gitlab 'GitLab CLI' "$(component_default git_gitlab)" 3>&1 1>&2 2>&3) || choices=''
-    else choices='desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab'; fi
-    for tag in desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
-        if tr -d '"' <<< "$choices" | grep -Fqx "$tag"; then printf '%s=1\n' "$tag"; else printf '%s=0\n' "$tag"; fi
-    done > "$config"
+        if [[ $scope == all ]]; then
+            whiptail --title 'Workstation configuration' --msgbox 'The base system, KDE, French keyboard, Docker, network security, automatic updates and account hardening are mandatory. Select the optional areas to configure.' 12 78
+            if ! areas=$(whiptail --title 'Optional areas' --separate-output --checklist 'Choose optional areas' 18 78 8 desktop 'Desktop applications' "$(category_default desktop)" ai 'AI command-line tools' "$(category_default ai)" git 'Git service command-line tools' "$(category_default git)" 3>&1 1>&2 2>&3); then
+                [[ -f $config ]] && { WS_COMPONENTS=$config; export WS_COMPONENTS; unset -f component_default category_default; return; }
+                fail 'Configurator cancelled before an initial selection.'; return 1
+            fi
+        else
+            areas=$scope
+        fi
+        if grep -Fqx desktop <<< "$areas"; then
+            choices+=$(whiptail --title 'Desktop applications' --separate-output --checklist 'Choose desktop applications' 20 78 10 desktop_onlyoffice 'ONLYOFFICE' "$(component_default desktop_onlyoffice)" desktop_obsidian 'Obsidian' "$(component_default desktop_obsidian)" desktop_bruno 'Bruno' "$(component_default desktop_bruno)" desktop_solaar 'Solaar (Logitech)' "$(component_default desktop_solaar)" desktop_bitwarden 'Bitwarden' "$(component_default desktop_bitwarden)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
+        fi
+        if grep -Fqx ai <<< "$areas"; then
+            choices+=$'\n'$(whiptail --title 'AI tools' --separate-output --checklist 'Choose AI command-line tools' 16 78 6 ai_codex 'Codex CLI' "$(component_default ai_codex)" ai_claude 'Claude Code' "$(component_default ai_claude)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
+        fi
+        if grep -Fqx git <<< "$areas"; then
+            choices+=$'\n'$(whiptail --title 'Git services' --separate-output --checklist 'Choose Git service command-line tools' 16 78 6 git_github 'GitHub CLI' "$(component_default git_github)" git_gitlab 'GitLab CLI' "$(component_default git_gitlab)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
+        fi
+    else
+        areas=$'desktop\nai\ngit'
+        choices=$'desktop_onlyoffice\ndesktop_obsidian\ndesktop_bruno\ndesktop_solaar\ndesktop_bitwarden\nai_codex\nai_claude\ngit_github\ngit_gitlab'
+    fi
+    {
+        printf 'area_accounts=1\n'
+        for tag in desktop ai git; do
+            if [[ $scope != all && $tag != "$scope" && -f $config ]]; then saved_value "area_$tag"
+            elif grep -Fqx "$tag" <<< "$areas"; then printf 'area_%s=1\n' "$tag"; else printf 'area_%s=0\n' "$tag"; fi
+        done
+        for tag in desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
+            if [[ $scope != all && $tag != "${scope}_"* && -f $config ]]; then saved_value "$tag"
+            elif tr -d '"' <<< "$choices" | grep -Fqx "$tag"; then printf '%s=1\n' "$tag"; else printf '%s=0\n' "$tag"; fi
+        done
+    } > "$config"
     chmod 0600 "$config"; WS_COMPONENTS=$config; export WS_COMPONENTS
-    unset -f component_default
+    unset -f component_default saved_value category_default
 }
 selected() { [[ -f ${WS_COMPONENTS:-} ]] && grep -qx "$1=1" "$WS_COMPONENTS"; }
 # Each action runs in a fresh Bash process: optional-error handling cannot disable

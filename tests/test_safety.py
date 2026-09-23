@@ -131,6 +131,7 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn('gpasswd -d "$current" sudo', accounts)
         self.assertIn('configure_password_keyboard', accounts)
         self.assertNotIn('Type ROOT', accounts)
+        self.assertIn('sudo passwd "$current"', accounts)
         self.assertIn("su - root -c 'id -u'", accounts)
         self.assertIn('schedule_rename "$current" "$daily"', accounts)
         self.assertIn('keeps docker and lazydocker', accounts)
@@ -141,7 +142,12 @@ printf 'SHOULD_NOT_CONTINUE'
 
     def test_configurator_controls_requested_optional_components(self):
         common = (ROOT / 'lib/common.sh').read_text()
-        self.assertIn('whiptail --title', common)
+        self.assertIn("'Optional areas'", common)
+        self.assertIn("'Desktop applications'", common)
+        self.assertIn("'AI tools'", common)
+        self.assertIn("'Git services'", common)
+        self.assertIn('area_accounts=1', common)
+        self.assertIn('saved_value', common)
         self.assertIn('desktop_onlyoffice', common)
         self.assertIn('ai_codex', common)
         self.assertIn('git_github', common)

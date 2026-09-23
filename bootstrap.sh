@@ -95,12 +95,20 @@ if [[ $WS_DRY_RUN == 0 ]]; then
     check_connectivity
     apt_update
     apt_install ca-certificates curl gnupg python3 unzip xz-utils tar file whiptail
-    configure_optional_components
+    configure_optional_components "${only:-all}"
 else
     log PLANNED 'Preflight: Ubuntu 26.04/aarch64, sudo, HTTPS connectivity, disk; apt update; minimal transport dependencies.'
 fi
 for index in "${!modules[@]}"; do
     current=${modules[$index]}
+    if [[ $WS_DRY_RUN == 0 && -z $only && $current == desktop ]] && ! selected area_desktop; then
+        record SKIPPED desktop 'Desktop applications not selected in configurator.'
+        continue
+    fi
+    if [[ $WS_DRY_RUN == 0 && -z $only && $current == ai ]] && ! selected area_ai; then
+        record SKIPPED ai 'AI tools not selected in configurator.'
+        continue
+    fi
     if [[ -n $only && $current != "$only" || $current == "$skip" ]]; then
         record SKIPPED "$current" 'Excluded by command-line filter.'
         continue
