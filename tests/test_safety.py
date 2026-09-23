@@ -64,6 +64,11 @@ printf 'CONTINUED'
         self.assertIn('"$WS_TMP/docker-identity.zsh"', docker)
         self.assertIn("<<'ZSH'", docker)
 
+    def test_konsole_standard_profile_is_replaced_with_workstation_profile(self):
+        desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
+        self.assertIn("$current_profile == 'Profile 1.profile'", desktop)
+        self.assertIn('DefaultProfile Workstation.profile', desktop)
+
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
         script = '''

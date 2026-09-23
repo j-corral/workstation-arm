@@ -4,8 +4,7 @@ konsole_install() {
     need_commands konsole kwriteconfig6 kreadconfig6
     local directory="$HOME/.local/share/konsole" scheme="$HOME/.local/share/konsole/Workstation.colorscheme" profile="$HOME/.local/share/konsole/Workstation.profile"
     install -d -m 0755 "$directory"
-    if [[ ! -e $scheme ]]; then
-        cat > "$scheme" <<'EOF'
+    cat > "$WS_TMP/Workstation.colorscheme" <<'EOF'
 [Background]
 Color=22,27,35
 
@@ -17,9 +16,8 @@ Description=Workstation translucent
 Opacity=0.86
 Blur=true
 EOF
-    fi
-    if [[ ! -e $profile ]]; then
-        cat > "$profile" <<'EOF'
+    install -m 0644 "$WS_TMP/Workstation.colorscheme" "$scheme"
+    cat > "$WS_TMP/Workstation.profile" <<'EOF'
 [Appearance]
 ColorScheme=Workstation
 
@@ -27,10 +25,10 @@ ColorScheme=Workstation
 Name=Workstation
 Parent=FALLBACK/
 EOF
-    fi
+    install -m 0644 "$WS_TMP/Workstation.profile" "$profile"
     local current_profile
     current_profile=$(kreadconfig6 --file konsolerc --group 'Desktop Entry' --key DefaultProfile)
-    if [[ -z $current_profile || $current_profile == Workstation.profile ]]; then
+    if [[ -z $current_profile || $current_profile == Workstation.profile || $current_profile == 'Profile 1.profile' || $current_profile == Shell.profile ]]; then
         kwriteconfig6 --file konsolerc --group 'Desktop Entry' --key DefaultProfile Workstation.profile
     else
         manual Konsole "Existing default profile $current_profile retained; select Workstation in Konsole if desired."
@@ -38,7 +36,7 @@ EOF
     [[ -f /usr/share/applications/org.kde.konsole.desktop ]] || { fail 'Konsole desktop service is missing.'; return 1; }
     kwriteconfig6 --file kdeglobals --group General --key TerminalApplication konsole
     kwriteconfig6 --file kdeglobals --group General --key TerminalService org.kde.konsole.desktop
-    manual Konsole 'Default Workstation profile enables a translucent background in Plasma; verify compositor rendering in the guest.'
+    manual Konsole 'The Workstation profile is the default and enables a translucent background in Plasma; verify compositor rendering in the guest.'
 }
 foot_install() {
     apt_install foot fonts-jetbrains-mono
