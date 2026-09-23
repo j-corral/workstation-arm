@@ -126,10 +126,11 @@ printf 'SHOULD_NOT_CONTINUE'
     def test_accounts_hardening_is_explicit_and_retains_developer_docker_access(self):
         bootstrap = (ROOT / 'bootstrap.sh').read_text()
         accounts = (ROOT / 'install/12-accounts.sh').read_text()
-        self.assertIn('current == accounts && $only != accounts', bootstrap)
-        self.assertIn('sudo usermod -aG docker "$daily"', accounts)
-        self.assertIn('gpasswd -d "$account" sudo', accounts)
+        self.assertNotIn('current == accounts && $only != accounts', bootstrap)
+        self.assertIn('sudo usermod -aG docker "$current"', accounts)
+        self.assertIn('gpasswd -d "$current" sudo', accounts)
         self.assertIn("su - root -c 'id -u'", accounts)
+        self.assertIn('schedule_rename "$current" "$daily"', accounts)
 
     def test_action_errexit_and_required_optional_boundaries(self):
         with tempfile.TemporaryDirectory() as d:

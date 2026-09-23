@@ -99,7 +99,7 @@ else
 fi
 for index in "${!modules[@]}"; do
     current=${modules[$index]}
-    if [[ -n $only && $current != "$only" || $current == "$skip" || $current == accounts && $only != accounts ]]; then
+    if [[ -n $only && $current != "$only" || $current == "$skip" ]]; then
         record SKIPPED "$current" 'Excluded by command-line filter.'
         continue
     fi

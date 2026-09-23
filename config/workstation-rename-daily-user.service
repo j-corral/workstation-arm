@@ -1,0 +1,12 @@
+[Unit]
+Description=Rename the initial Ubuntu user after workstation provisioning
+ConditionPathExists=/etc/workstation/rename-daily-user.env
+After=local-fs.target
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/workstation/rename-daily-user.sh
+
+[Install]
+WantedBy=multi-user.target

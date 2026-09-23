@@ -1,59 +1,42 @@
 #!/usr/bin/env bash
-# This module is deliberately opt-in: it changes who can administer the VM.
-valid_account_name() {
-    [[ $1 =~ ^[a-z_][a-z0-9_-]{0,30}$ && $1 != root ]]
+# The initial Ubuntu account is renamed at the next boot, retaining its home.
+valid_account_name() { [[ $1 =~ ^[a-z_][a-z0-9_-]{0,30}$ && $1 != root ]]; }
+schedule_rename() {
+    local current=$1 daily=$2
+    printf 'OLD_USER=%s\nNEW_USER=%s\n' "$current" "$daily" > "$WS_TMP/rename-daily-user.env"
+    sudo install -d -m 0700 /etc/workstation /usr/local/lib/workstation
+    sudo install -m 0600 "$WS_TMP/rename-daily-user.env" /etc/workstation/rename-daily-user.env
+    sudo install -m 0755 "$WS_ROOT/tools/rename_daily_user.sh" /usr/local/lib/workstation/rename-daily-user.sh
+    sudo install -m 0644 "$WS_ROOT/config/workstation-rename-daily-user.service" /etc/systemd/system/workstation-rename-daily-user.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable workstation-rename-daily-user.service
 }
-
 accounts_harden() {
-    local daily current answer account
-    local -a accounts
-    [[ -t 0 && -t 1 ]] || { fail 'Account hardening needs an interactive terminal.'; return 1; }
-
+    local current daily answer
+    [[ -t 0 && -t 1 ]] || { fail 'Account configuration needs an interactive terminal.'; return 1; }
     current=$(id -un)
     read -r -p "Normal desktop account [$current]: " answer
     daily=${answer:-$current}
     valid_account_name "$daily" || { fail 'Invalid daily account name.'; return 1; }
-    if ! id "$daily" >/dev/null 2>&1; then
-        log INFO "Creating the normal desktop account: $daily"
-        sudo adduser --disabled-password --gecos '' "$daily"
-        printf 'Choose a password for %s. It is used for the KDE session.\n' "$daily"
-        sudo passwd "$daily"
+    if [[ $daily != "$current" ]]; then
+        id "$daily" >/dev/null 2>&1 && { fail "Target account already exists: $daily. Reset or remove it before provisioning a fresh VM."; return 1; }
+        printf 'The current account %s will be renamed to %s at the next reboot. Type RENAME to continue: ' "$current" "$daily"
+        read -r answer
+        [[ $answer == RENAME ]] || { fail 'Account rename cancelled.'; return 1; }
     fi
-
-    printf '\nroot is the dedicated administrator account. It is used only with su from a terminal.\n'
-    printf 'Type ROOT to set or replace the root password: '
+    printf '\nroot is the dedicated terminal administrator. Type ROOT to set or replace its password: '
     read -r answer
-    [[ $answer == ROOT ]] || { fail 'Account hardening cancelled; root remains unchanged.'; return 1; }
+    [[ $answer == ROOT ]] || { fail 'Account configuration cancelled; root remains unchanged.'; return 1; }
     sudo passwd root
-    printf '\nVerify root now. Enter the new root password when requested.\n'
-    [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; no daily-account privileges were removed.'; return 1; }
-
-    getent group docker >/dev/null || { fail 'Docker must be installed before account separation, so the daily account can be granted its development access.'; return 1; }
-    sudo usermod -aG docker "$daily"
-    id -nG "$daily" | tr ' ' '\n' | grep -qx docker || { fail "Could not add $daily to the docker group."; return 1; }
-
-    printf '\nThis will remove sudo access from: %s' "$daily"
-    [[ $current == "$daily" ]] || printf ', %s (and remove its Docker access)' "$current"
-    printf '. %s keeps Docker access for Docker CLI and lazydocker; this group is root-equivalent. Type REMOVE to continue: ' "$daily"
+    [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; daily privileges were not changed.'; return 1; }
+    getent group docker >/dev/null || { fail 'Docker must be installed before account configuration.'; return 1; }
+    sudo usermod -aG docker "$current"
+    printf '\n%s keeps Docker/lazydocker access, which is root-equivalent. Type REMOVE to remove its sudo access: ' "$daily"
     read -r answer
-    [[ $answer == REMOVE ]] || { fail 'Account hardening cancelled; no daily-account privileges were removed.'; return 1; }
-    accounts=("$daily")
-    [[ $current == "$daily" ]] || accounts+=("$current")
-    for account in "${accounts[@]}"; do
-        if id -nG "$account" | tr ' ' '\n' | grep -qx sudo; then
-            sudo gpasswd -d "$account" sudo
-            if id -nG "$account" | tr ' ' '\n' | grep -qx sudo; then
-                fail "Could not remove $account from the sudo group."
-                return 1
-            fi
-        fi
-        if [[ $account != "$daily" ]] && id -nG "$account" | tr ' ' '\n' | grep -qx docker; then
-            sudo gpasswd -d "$account" docker
-        fi
-    done
-    printf '\nAccount hardening complete. %s can use Docker/lazydocker after a full logout and login.\nUse: su - root for other administrative commands, then exit.\n' "$daily"
+    [[ $answer == REMOVE ]] || { fail 'Account configuration cancelled; sudo access remains unchanged.'; return 1; }
+    sudo gpasswd -d "$current" sudo
+    id -nG "$current" | tr ' ' '\n' | grep -qx sudo && { fail 'Could not remove the daily account from sudo.'; return 1; }
+    if [[ $daily != "$current" ]]; then schedule_rename "$current" "$daily"; fi
+    printf '\nAccount configuration complete. Reboot now to apply the requested account name.\n'
 }
-
-main() {
-    component required 'Root administrator and normal desktop account' accounts_harden 'Interactive, opt-in root activation; daily account keeps Docker development access but loses sudo.'
-}
+main() { component required 'Root administrator and normal desktop account' accounts_harden 'Interactive root activation, Docker access, sudo removal and optional first-boot account rename.'; }
