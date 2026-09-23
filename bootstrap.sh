@@ -5,6 +5,8 @@ WS_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 export WS_ROOT WS_DRY_RUN=0 WS_REPORT='' WS_CONFIGURE=0
 # shellcheck source=lib/common.sh
 source "$WS_ROOT/lib/common.sh"
+# shellcheck source=lib/accounts.sh
+source "$WS_ROOT/lib/accounts.sh"
 # shellcheck source=lib/detection.sh
 source "$WS_ROOT/lib/detection.sh"
 modules=(system kde shell git runtimes docker dev desktop network security ai accounts)
@@ -96,6 +98,7 @@ if [[ $WS_DRY_RUN == 0 ]]; then
     apt_update
     apt_install ca-certificates curl gnupg python3 unzip xz-utils tar file whiptail
     configure_optional_components "${only:-all}"
+    if [[ -z $only || $only == accounts ]]; then configure_login_credentials; fi
 else
     log PLANNED 'Preflight: Ubuntu 26.04/aarch64, sudo, HTTPS connectivity, disk; apt update; minimal transport dependencies.'
 fi
