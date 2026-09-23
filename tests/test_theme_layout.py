@@ -10,6 +10,11 @@ SCRIPT = ROOT / 'config/mactahoe-first-login.sh'
 
 
 class ThemeLayoutTests(unittest.TestCase):
+    def test_layout_autostart_is_independent_of_daily_account_name(self):
+        kde = (ROOT / 'install/02-kde.sh').read_text()
+        self.assertIn('/usr/local/lib/workstation/mactahoe-first-login', kde)
+        self.assertNotIn('Exec=$HOME/.local/bin/workstation-mactahoe-apply', kde)
+
     def test_first_login_backup_and_idempotency(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)

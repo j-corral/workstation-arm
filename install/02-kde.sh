@@ -114,11 +114,14 @@ mactahoe_install() {
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__MacTahoe-Light
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XAI
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ''
-    install -d -m 0700 "$HOME/.local/bin" "$config_dir/autostart"
-    install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" "$HOME/.local/bin/workstation-mactahoe-apply"
-    sed "s|Exec=PLACEHOLDER|Exec=$HOME/.local/bin/workstation-mactahoe-apply|" "$WS_ROOT/config/mactahoe-first-login.desktop" > "$WS_TMP/mactahoe.desktop"
+    install -d -m 0700 "$config_dir/autostart"
+    # The daily desktop account can be renamed at first boot. Keep the launcher
+    # outside its home so its absolute Exec path remains valid after that move.
+    sudo install -d -m 0755 /usr/local/lib/workstation
+    sudo install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" /usr/local/lib/workstation/mactahoe-first-login
+    sed 's|Exec=PLACEHOLDER|Exec=/usr/local/lib/workstation/mactahoe-first-login|' "$WS_ROOT/config/mactahoe-first-login.desktop" > "$WS_TMP/mactahoe.desktop"
     install -m 0644 "$WS_TMP/mactahoe.desktop" "$config_dir/autostart/workstation-mactahoe.desktop"
-    "$HOME/.local/bin/workstation-mactahoe-apply"
+    /usr/local/lib/workstation/mactahoe-first-login
     # Activate last: a download or staging failure leaves the installed Breeze greeter.
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current MacTahoe
     manual MacTahoe 'Reboot to apply. Breeze remains installed. For login-theme recovery: sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze, then reboot. Runtime theme failures do not automatically switch to Breeze.'
