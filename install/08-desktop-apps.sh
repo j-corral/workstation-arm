@@ -94,9 +94,9 @@ main() {
     component optional 'Foot terminal' foot_install 'Optional native ARM64 Wayland terminal with translucent color theme; Konsole remains default.'
     component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
     component optional 'KWallet Manager' kwallet_install 'Manage Plasma secrets interactively; no automatic wallet/password creation.'
-    component optional Obsidian obsidian_install 'Official verified ARM64 Flatpak; existing vaults remain untouched.'
-    component optional ONLYOFFICE onlyoffice_install 'Official signed APT source, native ARM64 package, local Office files.'
-    component optional Solaar solaar_install 'Native ARM64 Ubuntu package for supported Logitech HID++ devices.'
-    component optional Bitwarden bitwarden_install 'Official Bitwarden Flatpak on Flathub for aarch64; account login remains interactive.'
+    if selected desktop_obsidian; then component optional Obsidian obsidian_install 'Selected ARM64 Flatpak.'; else record SKIPPED Obsidian 'Not selected in configurator.'; fi
+    if selected desktop_onlyoffice; then component optional ONLYOFFICE onlyoffice_install 'Selected local Office editor.'; else record SKIPPED ONLYOFFICE 'Not selected in configurator.'; fi
+    if selected desktop_solaar; then component optional Solaar solaar_install 'Selected Logitech manager.'; else record SKIPPED Solaar 'Not selected in configurator.'; fi
+    if selected desktop_bitwarden; then component optional Bitwarden bitwarden_install 'Selected aarch64 Flatpak.'; else record SKIPPED Bitwarden 'Not selected in configurator.'; fi
     manual 'Proton Mail' 'Unsupported for automatic ARM64 installation: official Linux .deb inspected is amd64 (1.14.0). Use the web app manually.'
 }

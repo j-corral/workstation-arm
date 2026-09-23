@@ -18,8 +18,8 @@ claude_install() {
     manual 'Claude Code' 'Launch claude in a project and authenticate interactively. No account or API key is configured by bootstrap.'
 }
 main() {
-    component optional 'Codex CLI' codex_install 'Official standalone installer for Linux ARM64; user-level CLI, no login.'
-    component optional 'Claude Code' claude_install 'Official signed stable APT repository; native ARM64 CLI, no login.'
+    if selected ai_codex; then component optional 'Codex CLI' codex_install 'Selected official CLI.'; else record SKIPPED 'Codex CLI' 'Not selected in configurator.'; fi
+    if selected ai_claude; then component optional 'Claude Code' claude_install 'Selected official CLI.'; else record SKIPPED 'Claude Code' 'Not selected in configurator.'; fi
     record SKIPPED 'Guest inference runtime' 'LM Studio and all models stay on macOS; no guest daemon or model download is needed for HTTP API access.'
     manual 'Mac LM Studio API' 'On macOS, start the LM Studio server with Serve on Local Network and authentication. Use the Mac address reachable from Parallels in guest applications; verify with ./verify.sh --lm-host http://HOST_IP:1234.'
 }

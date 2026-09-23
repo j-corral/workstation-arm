@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 umask 077
 WS_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-export WS_ROOT WS_DRY_RUN=0 WS_REPORT=''
+export WS_ROOT WS_DRY_RUN=0 WS_REPORT='' WS_CONFIGURE=0
 # shellcheck source=lib/common.sh
 source "$WS_ROOT/lib/common.sh"
 # shellcheck source=lib/detection.sh
@@ -19,7 +19,7 @@ valid_module() {
 }
 usage() {
     cat <<'HELP'
-Usage: ./bootstrap.sh [--dry-run] [--only MODULE | --skip MODULE]
+Usage: ./bootstrap.sh [--dry-run] [--configure] [--only MODULE | --skip MODULE]
 Modules: system kde shell git runtimes docker dev desktop network security ai accounts
 One filter is allowed. Minimal transport dependencies are always installed.
 Dry-run is an offline plan: no writes, sudo, downloads or target validation.
@@ -28,6 +28,7 @@ HELP
 while (( $# )); do
     case $1 in
         --dry-run) WS_DRY_RUN=1; shift ;;
+        --configure) WS_CONFIGURE=1; shift ;;
         --only|--skip)
             (( $# >= 2 )) || { usage; exit 2; }
             [[ -z $only && -z $skip ]] || { usage; exit 2; }
@@ -93,7 +94,8 @@ if [[ $WS_DRY_RUN == 0 ]]; then
     disk_report
     check_connectivity
     apt_update
-    apt_install ca-certificates curl gnupg python3 unzip xz-utils tar file
+    apt_install ca-certificates curl gnupg python3 unzip xz-utils tar file whiptail
+    configure_optional_components
 else
     log PLANNED 'Preflight: Ubuntu 26.04/aarch64, sudo, HTTPS connectivity, disk; apt update; minimal transport dependencies.'
 fi

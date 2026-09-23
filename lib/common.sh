@@ -40,6 +40,20 @@ locked_download() {
 elf_arm64() { python3 "$WS_ROOT/tools/artifacts.py" elf "$1"; }
 extract_archive() { python3 "$WS_ROOT/tools/artifacts.py" extract "$1" "$2"; }
 managed_block() { python3 "$WS_ROOT/tools/managed_block.py" "$1" "$2" "$3"; }
+configure_optional_components() {
+    local config="$HOME/.config/workstation/components.conf" choices tag
+    [[ -f $config && ${WS_CONFIGURE:-0} != 1 ]] && { WS_COMPONENTS=$config; export WS_COMPONENTS; return; }
+    install -d -m 0700 "$(dirname "$config")"
+    if [[ -t 0 && -t 1 ]] && command -v whiptail >/dev/null; then
+        choices=$(whiptail --title 'Workstation configuration' --checklist 'Select optional components' 20 78 10 \
+          desktop_onlyoffice 'ONLYOFFICE' ON desktop_obsidian 'Obsidian' ON desktop_bruno 'Bruno' ON desktop_solaar 'Solaar' ON desktop_bitwarden 'Bitwarden' ON ai_codex 'Codex CLI' ON ai_claude 'Claude Code' ON git_github 'GitHub CLI' ON git_gitlab 'GitLab CLI' ON 3>&1 1>&2 2>&3) || choices=''
+    else choices='desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab'; fi
+    for tag in desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
+        if tr -d '"' <<< "$choices" | grep -Fqx "$tag"; then printf '%s=1\n' "$tag"; else printf '%s=0\n' "$tag"; fi
+    done > "$config"
+    chmod 0600 "$config"; WS_COMPONENTS=$config; export WS_COMPONENTS
+}
+selected() { [[ -f ${WS_COMPONENTS:-} ]] && grep -qx "$1=1" "$WS_COMPONENTS"; }
 # Each action runs in a fresh Bash process: optional-error handling cannot disable
 # errexit inside action functions (Bash's `if function` pitfall).
 component() {
