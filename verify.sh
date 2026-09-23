@@ -145,9 +145,16 @@ package_check 'Proton VPN (KDE setup manual)' proton-vpn-gnome-desktop
 command_check optional OpenSnitch opensnitchd
 command_check optional 'OpenSnitch UI' opensnitch-ui
 if command -v systemctl >/dev/null; then
-    for service in tailscaled opensnitch; do
-        if systemctl is-active --quiet "$service"; then ok "$service service" active; else manual "$service service" 'inactive/not installed; OpenSnitch first activation is deliberately deferred'; fi
+    if systemctl is-active --quiet tailscaled; then ok 'tailscaled service' active; else manual 'tailscaled service' 'inactive/not installed; authenticate Tailscale separately if selected'; fi
+    opensnitch_service=''
+    for candidate in opensnitch.service opensnitchd.service; do
+        if systemctl list-unit-files --type=service --all --no-legend "$candidate" 2>/dev/null | grep -Eq "^${candidate//./\\.}[[:space:]]"; then opensnitch_service=$candidate; break; fi
     done
+    if [[ -n $opensnitch_service ]] && systemctl is-active --quiet "$opensnitch_service"; then
+        ok 'OpenSnitch service' "$opensnitch_service active"
+    else
+        bad 'OpenSnitch service' 'not active or not installed; run ./bootstrap.sh --only security and inspect its journal if it fails'
+    fi
 fi
 manual 'Network enrollment/rules' 'Authenticate only with client approval; review VPN/Tailscale/client VPN coexistence and OpenSnitch rules'
 manual 'Bitdefender GravityZone BEST' 'Client IT must supply/install/enroll its private Linux ARM64 kit; check systemctl status bdsec* after installation.'

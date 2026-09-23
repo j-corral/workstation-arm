@@ -64,6 +64,14 @@ printf 'CONTINUED'
         self.assertIn('"$WS_TMP/docker-identity.zsh"', docker)
         self.assertIn("<<'ZSH'", docker)
 
+    def test_opensnitch_detects_the_installed_service_and_uses_xcb_ui(self):
+        security = (ROOT / 'install/10-security.sh').read_text()
+        verify = (ROOT / 'verify.sh').read_text()
+        self.assertIn('opensnitch.service opensnitchd.service', security)
+        self.assertIn('systemctl enable --now "$service"', security)
+        self.assertIn('QT_QPA_PLATFORM=xcb', security)
+        self.assertIn('opensnitch.service opensnitchd.service', verify)
+
     def test_konsole_standard_profile_is_replaced_with_workstation_profile(self):
         desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
         self.assertIn("$current_profile == 'Profile 1.profile'", desktop)

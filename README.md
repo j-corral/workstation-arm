@@ -269,21 +269,17 @@ IT using the [official instructions](https://protonvpn.com/support/linux-vpn-deb
 Do not stack VPNs blindly: test DNS, private routes, kill switches and client VPN
 requirements. No alternative VPN or manual tunnel configuration is applied here.
 
-OpenSnitch is installed from Ubuntu. On a **new** installation its service is
-masked before package installation, so it cannot disrupt the bootstrap. After
-rule review, from a VM console with the GUI available:
+OpenSnitch is installed from Ubuntu and its detected systemd service is enabled
+at boot. The launcher uses the XCB backend under Plasma Wayland, which avoids
+the upstream-reported Wayland rule-dialog problem. From the desktop account:
 
 ```bash
-opensnitch-ui
-# In another terminal, when ready to configure application prompts:
-sudo systemctl unmask opensnitch
-sudo systemctl enable --now opensnitch
+workstation-opensnitch-ui
 ```
 
 Review application-specific rules for Docker, Tailscale, Proton/client VPNs and
-the Mac LM Studio API. Do not create a blanket allow rule. If installation fails after masking,
-the mask remains deliberately; check package state before unmasking. Existing
-OpenSnitch services/rules are preserved. Verify AppArmor with `sudo aa-status`.
+the Mac LM Studio API. Do not create a blanket allow rule. Existing OpenSnitch
+services/rules are preserved. Verify AppArmor with `sudo aa-status`.
 Standard Ubuntu unattended-upgrades and APT timers are enabled; existing disabled
 policies fail for review instead of being silently overwritten. Review allowed
 security origins and third-party update policy with IT.
