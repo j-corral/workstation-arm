@@ -123,11 +123,12 @@ printf 'SHOULD_NOT_CONTINUE'
             result = subprocess.run(['bash', str(ROOT / 'bootstrap.sh'), *args], capture_output=True)
             self.assertEqual(result.returncode, 2)
 
-    def test_accounts_hardening_is_explicit_and_removes_root_equivalent_groups(self):
+    def test_accounts_hardening_is_explicit_and_retains_developer_docker_access(self):
         bootstrap = (ROOT / 'bootstrap.sh').read_text()
         accounts = (ROOT / 'install/12-accounts.sh').read_text()
         self.assertIn('current == accounts && $only != accounts', bootstrap)
-        self.assertIn("for group in sudo docker", accounts)
+        self.assertIn('sudo usermod -aG docker "$daily"', accounts)
+        self.assertIn('gpasswd -d "$account" sudo', accounts)
         self.assertIn("su - root -c 'id -u'", accounts)
 
     def test_action_errexit_and_required_optional_boundaries(self):

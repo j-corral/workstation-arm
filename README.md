@@ -75,13 +75,13 @@ set. This also happens with `--only`. Module order is fixed:
 | `shell` | Zsh login shell, managed `.zshrc` section, direnv/mise/fzf hooks | Required |
 | `git` | Ubuntu git, OpenSSH client, gh, glab; secure `.ssh` directory/config | Required |
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
-| `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker | Docker required; TUI optional |
+| `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker; current developer added to the Docker group | Docker required; TUI optional; Docker group is root-equivalent |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
 | `desktop` | Transparent Konsole profile (default), Foot for Wayland, KeePassXC, Obsidian ARM64, ONLYOFFICE Desktop Editors, Solaar and Bitwarden Flatpak ARM64 | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
-| `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo` and any Docker root-equivalent access from daily accounts | Explicit opt-in only; required once selected |
+| `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo`; the chosen developer keeps Docker access | Explicit opt-in only; required once selected; Docker group is root-equivalent |
 
 The `network` module keeps the `systemd-resolved` stub at `127.0.0.53` and
 `/etc/resolv.conf` symlink unchanged. Its root route `~.` forwards ordinary DNS

@@ -5,7 +5,7 @@ valid_account_name() {
 }
 
 accounts_harden() {
-    local daily current answer group account
+    local daily current answer account
     local -a accounts
     [[ -t 0 && -t 1 ]] || { fail 'Account hardening needs an interactive terminal.'; return 1; }
 
@@ -28,26 +28,32 @@ accounts_harden() {
     printf '\nVerify root now. Enter the new root password when requested.\n'
     [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; no daily-account privileges were removed.'; return 1; }
 
-    printf '\nThis will remove sudo and Docker root-equivalent access from: %s' "$daily"
-    [[ $current == "$daily" ]] || printf ', %s' "$current"
-    printf '. Type REMOVE to continue: '
+    getent group docker >/dev/null || { fail 'Docker must be installed before account separation, so the daily account can be granted its development access.'; return 1; }
+    sudo usermod -aG docker "$daily"
+    id -nG "$daily" | tr ' ' '\n' | grep -qx docker || { fail "Could not add $daily to the docker group."; return 1; }
+
+    printf '\nThis will remove sudo access from: %s' "$daily"
+    [[ $current == "$daily" ]] || printf ', %s (and remove its Docker access)' "$current"
+    printf '. %s keeps Docker access for Docker CLI and lazydocker; this group is root-equivalent. Type REMOVE to continue: ' "$daily"
     read -r answer
     [[ $answer == REMOVE ]] || { fail 'Account hardening cancelled; no daily-account privileges were removed.'; return 1; }
     accounts=("$daily")
     [[ $current == "$daily" ]] || accounts+=("$current")
     for account in "${accounts[@]}"; do
-        for group in sudo docker; do
-            id -nG "$account" | tr ' ' '\n' | grep -qx "$group" || continue
-            sudo gpasswd -d "$account" "$group"
-            if id -nG "$account" | tr ' ' '\n' | grep -qx "$group"; then
-                fail "Could not remove $account from the $group group."
+        if id -nG "$account" | tr ' ' '\n' | grep -qx sudo; then
+            sudo gpasswd -d "$account" sudo
+            if id -nG "$account" | tr ' ' '\n' | grep -qx sudo; then
+                fail "Could not remove $account from the sudo group."
                 return 1
             fi
-        done
+        fi
+        if [[ $account != "$daily" ]] && id -nG "$account" | tr ' ' '\n' | grep -qx docker; then
+            sudo gpasswd -d "$account" docker
+        fi
     done
-    printf '\nAccount hardening complete. Use: su - root\nRun administrative commands directly, then exit.\n'
+    printf '\nAccount hardening complete. %s can use Docker/lazydocker after a full logout and login.\nUse: su - root for other administrative commands, then exit.\n' "$daily"
 }
 
 main() {
-    component required 'Root administrator and normal desktop account' accounts_harden 'Interactive, opt-in root activation and removal of daily sudo/Docker privileges.'
+    component required 'Root administrator and normal desktop account' accounts_harden 'Interactive, opt-in root activation; daily account keeps Docker development access but loses sudo.'
 }

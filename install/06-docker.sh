@@ -42,7 +42,9 @@ PYTHON
     sudo docker --host unix:///var/run/docker.sock version
     docker compose version
     docker buildx version
-    log WARN 'Docker group membership grants root-equivalent control over this VM. No user was added; use sudo or make that decision manually.'
+    sudo usermod -aG docker "$(id -un)"
+    id -nG "$(id -un)" | tr ' ' '\n' | grep -qx docker
+    log WARN 'The daily developer account was added to docker for Docker CLI/lazydocker. Docker group membership is root-equivalent; log out and back in before using the socket without sudo.'
     manual Docker 'Run ./verify.sh --docker-hello for an explicit network test. Docker may publish containers beyond UFW rules; bind development ports to loopback.'
 }
 lazydocker_install() { install_binary_archive lazydocker lazydocker lazydocker; }
