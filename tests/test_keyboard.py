@@ -11,6 +11,10 @@ spec.loader.exec_module(keyboard)
 
 
 class KeyboardTests(unittest.TestCase):
+    def test_keyboard_configuration_runs_before_kde_installation(self):
+        kde = (ROOT / 'install/02-kde.sh').read_text()
+        self.assertLess(kde.index("component required Keyboard"), kde.index("component required KDE"))
+
     def test_existing_settings_preserved_and_rerun_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'keyboard'

@@ -76,8 +76,8 @@ keyboard_install() {
     manual Keyboard 'After reboot, sign in to the preselected Plasma session: French PC AZERTY (fr/pc105) and NumLock on. Existing GNOME input sources are separate. SDDM Numlock applies to its X11 greeter; a Wayland greeter needs compositor-specific settings. /etc/sddm.conf can override the drop-in.'
 }
 main() {
-    component required KDE kde_install 'Minimal Plasma desktop; select SDDM and Plasma Wayland for the next boot, preserving the running session.'
     component required Keyboard keyboard_install 'French PC AZERTY by default; enable NumLock at Plasma startup and for the SDDM X11 greeter.'
+    component required KDE kde_install 'Minimal Plasma desktop; select SDDM and Plasma Wayland for the next boot, preserving the running session.'
     component optional MacTahoe mactahoe_install 'Pinned Plasma 6 desktop/SDDM theme; retain Breeze for recovery.'
 }
 
