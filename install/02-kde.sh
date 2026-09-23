@@ -2,8 +2,8 @@
 kde_install() {
     # SDDM's default greeter uses X11 even when the selected desktop is Wayland.
     # apt_install disables Recommends, so install its server/input driver explicitly.
-    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
-    need_commands plasmashell startplasma-wayland systemsettings kscreen-doctor
+    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput x11-xserver-utils konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
+    need_commands plasmashell startplasma-wayland systemsettings kscreen-doctor xrandr
     [[ -x /usr/bin/X ]] || { fail 'SDDM X11 server /usr/bin/X is missing; display manager unchanged.'; return 1; }
     /usr/bin/X -version
     [[ -f /usr/share/sddm/themes/breeze/Main.qml ]] || { fail 'SDDM Breeze theme is missing'; return 1; }
@@ -46,6 +46,14 @@ kde_configure_login() {
     sudo systemctl enable --force sddm.service
     sudo systemctl set-default graphical.target
     [[ $(readlink -f /etc/systemd/system/display-manager.service) == */sddm.service ]] || { fail 'SDDM boot service selection failed'; return 1; }
+
+    # Keep the greeter at the Parallels desktop resolution when Xorg exposes
+    # that mode. The hook gracefully leaves other displays at their native mode.
+    [[ ! -L /etc/sddm.conf.d/91-workstation-display.conf ]] || { fail 'Refusing symlink SDDM display configuration'; return 1; }
+    sudo install -d -m 0755 /usr/local/lib/workstation /etc/sddm.conf.d
+    sudo install -m 0755 "$WS_ROOT/config/sddm-xsetup.sh" /usr/local/lib/workstation/sddm-xsetup
+    printf '[X11]\nDisplayCommand=/usr/local/lib/workstation/sddm-xsetup\n' > "$WS_TMP/sddm-display.conf"
+    sudo install -m 0644 "$WS_TMP/sddm-display.conf" /etc/sddm.conf.d/91-workstation-display.conf
 }
 keyboard_install() {
     apt_install keyboard-configuration console-setup libkf6config-bin
@@ -82,7 +90,7 @@ main() {
 }
 
 mactahoe_install() {
-    local source icons_source share icon_share config_dir
+    local source icons_source share icon_share config_dir splash_source
     apt_install qml6-module-qt5compat-graphicaleffects qml6-module-org-kde-plasma-plasma5support kwin-style-aurorae qt-style-kvantum libgtk-3-bin
     need_commands plasma-apply-lookandfeel kvantummanager gtk-update-icon-cache
     locked_download mactahoe "$WS_TMP/mactahoe.tar.gz"
@@ -94,6 +102,7 @@ mactahoe_install() {
     share=${XDG_DATA_HOME:-$HOME/.local/share}
     icon_share="$share/icons"
     config_dir=${XDG_CONFIG_HOME:-$HOME/.config}
+    splash_source="$WS_ROOT/config/workstation-splash"
     python3 "$WS_ROOT/tools/theme_assets.py" prepare "$source" "$share" "$WS_TMP/greeter" "$config_dir"
     # The pinned upstream installer builds the icon/cursor links in private
     # staging only; our helper validates them before replacing managed themes.
@@ -122,6 +131,9 @@ mactahoe_install() {
     sed 's|Exec=PLACEHOLDER|Exec=/usr/local/lib/workstation/mactahoe-first-login|' "$WS_ROOT/config/mactahoe-first-login.desktop" > "$WS_TMP/mactahoe.desktop"
     install -m 0644 "$WS_TMP/mactahoe.desktop" "$config_dir/autostart/workstation-mactahoe.desktop"
     /usr/local/lib/workstation/mactahoe-first-login
+    python3 "$WS_ROOT/tools/theme_assets.py" copy "$splash_source" "$share/plasma/look-and-feel/org.workstation.splash"
+    [[ -f $share/plasma/look-and-feel/org.workstation.splash/contents/splash/Splash.qml ]]
+    kwriteconfig6 --file ksplashrc --group KSplash --key Theme org.workstation.splash
     # Activate last: a download or staging failure leaves the installed Breeze greeter.
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current MacTahoe
     manual MacTahoe 'Reboot to apply. Breeze remains installed. For login-theme recovery: sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze, then reboot. Runtime theme failures do not automatically switch to Breeze.'

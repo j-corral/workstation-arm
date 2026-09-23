@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Id": "org.workstation.splash",
+    "Name": "Workstation",
+    "Description": "Neutral animated splash screen for the workstation desktop",
+    "Version": "1.0",
+    "License": "MIT"
+  }
+}

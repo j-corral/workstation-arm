@@ -13,6 +13,21 @@ class LoginTests(unittest.TestCase):
         source = (ROOT / 'install/02-kde.sh').read_text()
         self.assertIn('systemsettings kscreen', source)
         self.assertIn('systemsettings kscreen-doctor', source)
+        self.assertIn('x11-xserver-utils', source)
+        self.assertIn('DisplayCommand=/usr/local/lib/workstation/sddm-xsetup', source)
+        self.assertIn('org.workstation.splash', source)
+
+    def test_sddm_setup_keeps_fallback_and_only_sets_supported_resolution(self):
+        setup = (ROOT / 'config/sddm-xsetup.sh').read_text()
+        self.assertIn('/usr/share/sddm/scripts/Xsetup', setup)
+        self.assertIn('xrandr --output "$output" --mode 1920x1080', setup)
+        self.assertIn('|| true', setup)
+
+    def test_workstation_splash_is_neutral_and_animated(self):
+        splash = (ROOT / 'config/workstation-splash/contents/splash/Splash.qml').read_text()
+        self.assertIn('Preparing your desktop', splash)
+        self.assertIn('Animation.Infinite', splash)
+        self.assertNotIn('Apple', splash)
 
     def run_selection(self, present):
         with tempfile.TemporaryDirectory() as directory:
@@ -40,7 +55,8 @@ readlink() { printf '/usr/lib/systemd/system/sddm.service\n'; }
 kde_configure_login
 '''
             result = subprocess.run(['bash', '-c', script], capture_output=True, text=True,
-                                    env={**os.environ, 'TEST_DIR': directory, 'WS_TMP': directory})
+                                    env={**os.environ, 'TEST_DIR': directory, 'WS_TMP': directory,
+                                         'WS_ROOT': str(ROOT)})
             calls = (work / 'calls').read_text() if (work / 'calls').exists() else ''
             return result, calls
 
