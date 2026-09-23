@@ -129,12 +129,15 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertNotIn('current == accounts && $only != accounts', bootstrap)
         self.assertIn('sudo usermod -aG docker "$current"', accounts)
         self.assertIn('gpasswd -d "$current" sudo', accounts)
+        self.assertIn('configure_password_keyboard', accounts)
+        self.assertNotIn('Type ROOT', accounts)
         self.assertIn("su - root -c 'id -u'", accounts)
         self.assertIn('schedule_rename "$current" "$daily"', accounts)
         self.assertIn('keeps docker and lazydocker', accounts)
         self.assertNotIn('CONFIRM_REMOVE_SUDO', accounts)
         self.assertIn('then loses sudo', accounts)
         self.assertLess(accounts.index('schedule_rename "$current" "$daily"'), accounts.index('gpasswd -d "$current" sudo'))
+        self.assertLess(accounts.index('configure_password_keyboard'), accounts.index('sudo passwd root'))
 
     def test_configurator_controls_requested_optional_components(self):
         common = (ROOT / 'lib/common.sh').read_text()

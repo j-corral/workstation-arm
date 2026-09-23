@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # The initial Ubuntu account is renamed at the next boot, retaining its home.
 valid_account_name() { [[ $1 =~ ^[a-z_][a-z0-9_-]{0,30}$ && $1 != root ]]; }
+configure_password_keyboard() {
+    # `--only accounts` must be safe too: configure the physical layout before
+    # reading a secret, rather than depending on a previous KDE-module run.
+    apt_install keyboard-configuration console-setup
+    need_commands setupcon
+    sudo python3 "$WS_ROOT/tools/keyboard_config.py" /etc/default/keyboard
+    sudo setupcon
+    if [[ ${XDG_SESSION_TYPE:-} == x11 ]] && command -v setxkbmap >/dev/null 2>&1; then
+        setxkbmap -layout fr -model pc105
+    fi
+}
 schedule_rename() {
     local current=$1 daily=$2
     printf 'OLD_USER=%s\nNEW_USER=%s\n' "$current" "$daily" > "$WS_TMP/rename-daily-user.env"
@@ -24,9 +35,8 @@ accounts_harden() {
         read -r answer
         [[ $answer == RENAME ]] || { fail 'Account rename cancelled.'; return 1; }
     fi
-    printf '\nroot is the dedicated terminal administrator. Type ROOT to set or replace its password: '
-    read -r answer
-    [[ $answer == ROOT ]] || { fail 'Account configuration cancelled; root remains unchanged.'; return 1; }
+    configure_password_keyboard
+    printf '\nFrench PC AZERTY (fr/pc105) is configured. Set the root password now.\n'
     sudo passwd root
     [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; daily privileges were not changed.'; return 1; }
     getent group docker >/dev/null || { fail 'Docker must be installed before account configuration.'; return 1; }
