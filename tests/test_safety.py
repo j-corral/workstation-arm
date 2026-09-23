@@ -69,6 +69,13 @@ printf 'CONTINUED'
         self.assertIn("$current_profile == 'Profile 1.profile'", desktop)
         self.assertIn('DefaultProfile Workstation.profile', desktop)
 
+    def test_zsh_uses_current_directory_prompt_and_syntax_highlighting(self):
+        shell = (ROOT / 'install/03-shell.sh').read_text()
+        zshrc = (ROOT / 'config/zshrc').read_text()
+        self.assertIn('zsh-syntax-highlighting', shell)
+        self.assertIn("PROMPT='%F{cyan}%~%f %# '", zshrc)
+        self.assertIn('/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh', zshrc)
+
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
         script = '''

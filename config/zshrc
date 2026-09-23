@@ -1,9 +1,17 @@
 # Local tools; no automatic downloads or project trust.
 typeset -U path PATH
 path=("$HOME/.local/bin" "$HOME/.bun/bin" "$HOME/.lmstudio/bin" $path)
+
+# Keep the prompt focused on the current directory.  Zsh expands %~ on every
+# prompt, using ~ for the home directory while retaining the path below it.
+PROMPT='%F{cyan}%~%f %# '
 if (( $+commands[direnv] )); then eval "$(direnv hook zsh)"; fi
 if (( $+commands[mise] )); then eval "$(mise activate zsh)"; fi
 # Ubuntu fzf package integration (also handles versions before --zsh existed).
 [[ ! -r /usr/share/doc/fzf/examples/key-bindings.zsh ]] || source /usr/share/doc/fzf/examples/key-bindings.zsh
 [[ ! -r /usr/share/doc/fzf/examples/completion.zsh ]] || source /usr/share/doc/fzf/examples/completion.zsh
 if ! (( $+commands[bat] )) && (( $+commands[batcat] )); then alias bat=batcat; fi
+
+# This must remain the final interactive hook so it can colour the command
+# line after all other plugins and completion handlers have run.
+[[ ! -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] || source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
