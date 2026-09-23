@@ -1,25 +1,77 @@
 #!/usr/bin/env bash
 konsole_install() {
-    apt_install konsole libkf6config-bin
+    apt_install konsole libkf6config-bin fonts-jetbrains-mono
     need_commands konsole kwriteconfig6 kreadconfig6
     local directory="$HOME/.local/share/konsole" scheme="$HOME/.local/share/konsole/Workstation.colorscheme" profile="$HOME/.local/share/konsole/Workstation.profile"
     install -d -m 0755 "$directory"
     cat > "$WS_TMP/Workstation.colorscheme" <<'EOF'
 [Background]
-Color=22,27,35
+Color=17,24,39
 
 [Foreground]
-Color=231,238,247
+Color=248,250,252
+
+[Color0]
+Color=69,71,90
+
+[Color1]
+Color=243,139,168
+
+[Color2]
+Color=166,227,161
+
+[Color3]
+Color=249,226,175
+
+[Color4]
+Color=137,180,250
+
+[Color5]
+Color=203,166,247
+
+[Color6]
+Color=148,226,213
+
+[Color7]
+Color=186,194,222
+
+[Color8]
+Color=88,91,112
+
+[Color9]
+Color=243,139,168
+
+[Color10]
+Color=166,227,161
+
+[Color11]
+Color=249,226,175
+
+[Color12]
+Color=137,180,250
+
+[Color13]
+Color=203,166,247
+
+[Color14]
+Color=148,226,213
+
+[Color15]
+Color=205,214,244
+
+[Cursor]
+Color=137,180,250
 
 [General]
-Description=Workstation translucent
-Opacity=0.86
+Description=Workstation translucent 40%
+Opacity=0.60
 Blur=true
 EOF
     install -m 0644 "$WS_TMP/Workstation.colorscheme" "$scheme"
     cat > "$WS_TMP/Workstation.profile" <<'EOF'
 [Appearance]
 ColorScheme=Workstation
+Font=JetBrains Mono,12,-1,5,50,0,0,0,0,0
 
 [General]
 Name=Workstation
@@ -36,7 +88,7 @@ EOF
     [[ -f /usr/share/applications/org.kde.konsole.desktop ]] || { fail 'Konsole desktop service is missing.'; return 1; }
     kwriteconfig6 --file kdeglobals --group General --key TerminalApplication konsole
     kwriteconfig6 --file kdeglobals --group General --key TerminalService org.kde.konsole.desktop
-    manual Konsole 'The Workstation profile is the default and enables a translucent background in Plasma; verify compositor rendering in the guest.'
+    manual Konsole 'The Workstation profile uses 40% transparency, JetBrains Mono 12pt and a high-contrast colour palette; verify compositor rendering in the guest.'
 }
 foot_install() {
     apt_install foot fonts-jetbrains-mono

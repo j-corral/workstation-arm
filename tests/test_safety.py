@@ -68,6 +68,9 @@ printf 'CONTINUED'
         desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
         self.assertIn("$current_profile == 'Profile 1.profile'", desktop)
         self.assertIn('DefaultProfile Workstation.profile', desktop)
+        self.assertIn('Opacity=0.60', desktop)
+        self.assertIn('Font=JetBrains Mono,12', desktop)
+        self.assertIn('Color=248,250,252', desktop)
 
     def test_zsh_uses_current_directory_prompt_and_syntax_highlighting(self):
         shell = (ROOT / 'install/03-shell.sh').read_text()
