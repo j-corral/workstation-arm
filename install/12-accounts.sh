@@ -31,12 +31,16 @@ accounts_harden() {
     [[ $(su - root -c 'id -u') == 0 ]] || { fail 'Could not verify root access; daily privileges were not changed.'; return 1; }
     getent group docker >/dev/null || { fail 'Docker must be installed before account configuration.'; return 1; }
     sudo usermod -aG docker "$current"
-    printf '\n%s keeps Docker/lazydocker access, which is root-equivalent. Type REMOVE to remove its sudo access: ' "$daily"
+    printf '\nYour normal account will keep: docker, lazydocker.\n'
+    printf 'Your normal account will lose only: sudo.\n'
+    printf 'Type CONFIRM_REMOVE_SUDO to continue: '
     read -r answer
-    [[ $answer == REMOVE ]] || { fail 'Account configuration cancelled; sudo access remains unchanged.'; return 1; }
+    [[ $answer == CONFIRM_REMOVE_SUDO ]] || { fail 'Account configuration cancelled; sudo access remains unchanged.'; return 1; }
+    # Install and enable the root-owned first-boot rename before revoking the
+    # current account's sudo privilege.
+    if [[ $daily != "$current" ]]; then schedule_rename "$current" "$daily"; fi
     sudo gpasswd -d "$current" sudo
     id -nG "$current" | tr ' ' '\n' | grep -qx sudo && { fail 'Could not remove the daily account from sudo.'; return 1; }
-    if [[ $daily != "$current" ]]; then schedule_rename "$current" "$daily"; fi
     printf '\nAccount configuration complete. Reboot now to apply the requested account name.\n'
 }
 main() { component required 'Root administrator and normal desktop account' accounts_harden 'Interactive root activation, Docker access, sudo removal and optional first-boot account rename.'; }

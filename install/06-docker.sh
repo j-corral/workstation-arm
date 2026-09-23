@@ -44,6 +44,9 @@ PYTHON
     docker buildx version
     sudo usermod -aG docker "$(id -un)"
     id -nG "$(id -un)" | tr ' ' '\n' | grep -qx docker
+    # shellcheck disable=SC2016 # Keep command substitutions for future Zsh sessions.
+    managed_block "$HOME/.zshrc" docker-identity 'export DOCKER_UID="$(id -u)"
+export DOCKER_GID="$(id -g)"'
     log WARN 'The daily developer account was added to docker for Docker CLI/lazydocker. Docker group membership is root-equivalent; log out and back in before using the socket without sudo.'
     manual Docker 'Run ./verify.sh --docker-hello for an explicit network test. Docker may publish containers beyond UFW rules; bind development ports to loopback.'
 }
