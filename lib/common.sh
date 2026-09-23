@@ -5,7 +5,22 @@ source "$WS_ROOT/lib/logging.sh"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
 fail() { log ERROR "$*"; return 1; }
-apt_update() { sudo apt-get -o APT::Update::Error-Mode=any update; }
+apt_wait_for_locks() {
+    local deadline=$((SECONDS + 300))
+    command -v fuser >/dev/null 2>&1 || return
+    while sudo fuser -s /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock; do
+        if (( SECONDS >= deadline )); then
+            fail 'APT is still busy after five minutes; wait for the other package operation to finish, then rerun bootstrap.'
+            return 1
+        fi
+        log WARN 'APT is busy with another package operation; waiting before continuing.'
+        sleep 5
+    done
+}
+apt_update() {
+    apt_wait_for_locks
+    sudo apt-get -o DPkg::Lock::Timeout=300 -o APT::Update::Error-Mode=any update
+}
 package_installed() { [[ $(dpkg-query -W -f='${Status}' "$1" 2>/dev/null) == 'install ok installed' ]]; }
 apt_install() {
     local package architecture candidate
@@ -15,7 +30,8 @@ apt_install() {
         architecture=$(apt-cache show "$package=$candidate" | awk '/^Architecture:/ {value=$2} END {print value}')
         [[ $architecture == arm64 || $architecture == all ]] || { fail "Rejected $package architecture: $architecture"; return 1; }
     done
-    sudo env DEBIAN_FRONTEND=noninteractive apt-get --no-remove --no-install-recommends install -y "$@"
+    apt_wait_for_locks
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 --no-remove --no-install-recommends install -y "$@"
     for package in "$@"; do
         package_installed "$package" || return 1
         architecture=$(dpkg-query -W -f='${Architecture}' "$package")

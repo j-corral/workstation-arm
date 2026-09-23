@@ -53,6 +53,12 @@ printf 'CONTINUED'
             self.assertEqual(result.returncode, expected, (case, result.stdout, result.stderr))
             self.assertEqual('CONTINUED' in result.stdout, expected == 0)
 
+    def test_apt_operations_wait_for_concurrent_package_manager(self):
+        common = (ROOT / 'lib/common.sh').read_text()
+        self.assertIn('apt_wait_for_locks()', common)
+        self.assertIn('DPkg::Lock::Timeout=300', common)
+        self.assertIn('APT is busy with another package operation', common)
+
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
         script = '''
