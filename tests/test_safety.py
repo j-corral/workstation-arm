@@ -59,6 +59,11 @@ printf 'CONTINUED'
         self.assertIn('DPkg::Lock::Timeout=300', common)
         self.assertIn('APT is busy with another package operation', common)
 
+    def test_docker_identity_uses_a_content_file_for_managed_block(self):
+        docker = (ROOT / 'install/06-docker.sh').read_text()
+        self.assertIn('"$WS_TMP/docker-identity.zsh"', docker)
+        self.assertIn("<<'ZSH'", docker)
+
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
         script = '''
