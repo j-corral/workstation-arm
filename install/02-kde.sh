@@ -2,8 +2,8 @@
 kde_install() {
     # SDDM's default greeter uses X11 even when the selected desktop is Wayland.
     # apt_install disables Recommends, so install its server/input driver explicitly.
-    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin
-    need_commands plasmashell startplasma-wayland
+    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
+    need_commands plasmashell startplasma-wayland systemsettings kscreen-doctor
     [[ -x /usr/bin/X ]] || { fail 'SDDM X11 server /usr/bin/X is missing; display manager unchanged.'; return 1; }
     /usr/bin/X -version
     [[ -f /usr/share/sddm/themes/breeze/Main.qml ]] || { fail 'SDDM Breeze theme is missing'; return 1; }

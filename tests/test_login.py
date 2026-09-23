@@ -9,6 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LoginTests(unittest.TestCase):
+    def test_kde_installs_system_settings_and_display_support(self):
+        source = (ROOT / 'install/02-kde.sh').read_text()
+        self.assertIn('systemsettings kscreen', source)
+        self.assertIn('systemsettings kscreen-doctor', source)
+
     def run_selection(self, present):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
