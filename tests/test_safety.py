@@ -141,6 +141,8 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertNotIn('current == accounts && $only != accounts', bootstrap)
         self.assertIn('configure_login_credentials', bootstrap)
         self.assertIn('prepare_login_keyboard', credentials)
+        self.assertIn('org.gnome.desktop.input-sources', credentials)
+        self.assertIn("[('xkb', 'fr')]", credentials)
         self.assertLess(bootstrap.index('configure_optional_components'), bootstrap.index('configure_login_credentials'))
         self.assertIn('sudo usermod -aG docker "$current"', accounts)
         self.assertIn('gpasswd -d "$current" sudo', accounts)

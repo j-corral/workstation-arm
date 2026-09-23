@@ -26,11 +26,17 @@ set_login_password() {
     unset password confirmation
 }
 prepare_login_keyboard() {
+    local desktop=${XDG_CURRENT_DESKTOP:-}
     apt_install keyboard-configuration console-setup
     need_commands setupcon
     sudo python3 "$WS_ROOT/tools/keyboard_config.py" /etc/default/keyboard
     sudo setupcon
-    if [[ ${XDG_SESSION_TYPE:-} == x11 ]] && command -v setxkbmap >/dev/null 2>&1; then
+    if [[ ${desktop,,} == *gnome* ]] && command -v gsettings >/dev/null 2>&1; then
+        # A fresh Ubuntu desktop is GNOME/Wayland. setupcon changes only a VT,
+        # so set the live GNOME input source before collecting credentials.
+        gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'fr')]"
+        [[ $(gsettings get org.gnome.desktop.input-sources sources) == *"'fr'"* ]] || { fail 'Could not apply the French keyboard to the current GNOME session.'; return 1; }
+    elif [[ ${XDG_SESSION_TYPE:-} == x11 ]] && command -v setxkbmap >/dev/null 2>&1; then
         setxkbmap -layout fr -model pc105
     fi
 }
