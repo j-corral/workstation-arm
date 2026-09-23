@@ -54,7 +54,7 @@ configure_optional_components() {
     }
     if [[ -t 0 && -t 1 ]] && command -v whiptail >/dev/null; then
         if [[ $scope == all ]]; then
-            whiptail --title 'Workstation configuration' --msgbox 'The base system, KDE, French keyboard, Docker, network security, automatic updates and account hardening are mandatory. Select the optional areas to configure.' 12 78
+            whiptail --title 'Mandatory workstation plan' --msgbox 'These steps always run:\n\n• Base Ubuntu tooling and signed package updates\n• KDE Plasma, SDDM, French PC keyboard (fr/pc105) and NumLock\n• Zsh, Git and SSH baseline, Python, mise, uv, Bun and .NET\n• Docker Engine and developer Docker access\n• AppArmor and automatic security updates\n• Network protections configured by this workstation\n• Root password, normal desktop account password, then sudo removal\n\nThe next screens select only additional desktop, AI and Git-service tools.' 22 78
             if ! areas=$(whiptail --title 'Optional areas' --separate-output --checklist 'Choose optional areas' 18 78 8 desktop 'Desktop applications' "$(category_default desktop)" ai 'AI command-line tools' "$(category_default ai)" git 'Git service command-line tools' "$(category_default git)" 3>&1 1>&2 2>&3); then
                 [[ -f $config ]] && { WS_COMPONENTS=$config; export WS_COMPONENTS; unset -f component_default category_default; return; }
                 fail 'Configurator cancelled before an initial selection.'; return 1

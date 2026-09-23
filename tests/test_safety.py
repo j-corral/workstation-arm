@@ -143,6 +143,8 @@ printf 'SHOULD_NOT_CONTINUE'
     def test_configurator_controls_requested_optional_components(self):
         common = (ROOT / 'lib/common.sh').read_text()
         self.assertIn("'Optional areas'", common)
+        self.assertIn("'Mandatory workstation plan'", common)
+        self.assertIn('then sudo removal', common)
         self.assertIn("'Desktop applications'", common)
         self.assertIn("'AI tools'", common)
         self.assertIn("'Git services'", common)
