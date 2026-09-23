@@ -27,14 +27,14 @@ See the [validation record and guest acceptance procedure](docs/validation.md).
    existing system without reviewing its configuration.
 3. Copy/clone this repository **inside the VM's own disk**. Do not run the real
    installer on macOS or keep client files in shared host folders.
-4. On a fresh Ubuntu VM with Git already available, download and launch it with:
+4. On a fresh Ubuntu VM, download and launch it with:
 
    ```bash
-   git clone --depth 1 https://github.com/j-corral/workstation-arm.git && cd workstation-arm && ./bootstrap.sh
+   sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 https://github.com/j-corral/workstation-arm.git && cd workstation-arm && ./bootstrap.sh
    ```
 
-   This downloads a reviewable local checkout before execution. If Git is not
-   installed yet, run `sudo apt-get update && sudo apt-get install -y git` first.
+   This installs Git from Ubuntu's signed repository, downloads a reviewable
+   local checkout, then starts the configurator.
 5. From the repository directory, a dry run remains available:
 
    ```bash
