@@ -27,11 +27,18 @@ See the [validation record and guest acceptance procedure](docs/validation.md).
    existing system without reviewing its configuration.
 3. Copy/clone this repository **inside the VM's own disk**. Do not run the real
    installer on macOS or keep client files in shared host folders.
-4. From the repository directory:
+4. On a fresh Ubuntu VM with Git already available, download and launch it with:
+
+   ```bash
+   git clone --depth 1 https://github.com/j-corral/workstation-arm.git && cd workstation-arm && ./bootstrap.sh
+   ```
+
+   This downloads a reviewable local checkout before execution. If Git is not
+   installed yet, run `sudo apt-get update && sudo apt-get install -y git` first.
+5. From the repository directory, a dry run remains available:
 
    ```bash
    ./bootstrap.sh --dry-run
-   ./bootstrap.sh
    ./verify.sh
    ```
 
