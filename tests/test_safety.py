@@ -132,6 +132,15 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn("su - root -c 'id -u'", accounts)
         self.assertIn('schedule_rename "$current" "$daily"', accounts)
 
+    def test_configurator_controls_requested_optional_components(self):
+        common = (ROOT / 'lib/common.sh').read_text()
+        self.assertIn('whiptail --title', common)
+        self.assertIn('desktop_onlyoffice', common)
+        self.assertIn('ai_codex', common)
+        self.assertIn('git_github', common)
+        self.assertIn('selected desktop_bruno', (ROOT / 'install/07-dev-tools.sh').read_text())
+        self.assertIn('selected git_gitlab', (ROOT / 'install/04-git-ssh.sh').read_text())
+
     def test_action_errexit_and_required_optional_boundaries(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)

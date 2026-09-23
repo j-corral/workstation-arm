@@ -72,5 +72,5 @@ main() {
     component optional 'Visual Studio Code' code_install 'Official signed Microsoft ARM64 APT repository.'
     component optional Zed zed_install 'Pinned stable official ARM64 archive; Parallels Vulkan remains a manual check.'
     component optional 'JetBrains Toolbox' toolbox_install 'Official ARM64 archive; Ubuntu 26.04 is outside the currently listed tested distributions.'
-    component optional Bruno bruno_install 'Official stable ARM64 .deb with pinned SHA-256; documented APT feed is amd64-only.'
+    if selected desktop_bruno; then component optional Bruno bruno_install 'Selected stable ARM64 .deb with pinned SHA-256.'; else record SKIPPED Bruno 'Not selected in configurator.'; fi
 }

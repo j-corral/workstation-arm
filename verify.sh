@@ -94,8 +94,8 @@ if (( hello )); then
     else bad 'Docker hello-world' 'network pull, permissions or daemon execution failed'; fi
 else manual 'Docker hello-world' 'Opt in with ./verify.sh --docker-hello'; fi
 section 'GIT SERVICES'
-command_check required gh gh
-command_check required glab glab
+command_check optional gh gh
+command_check optional glab glab
 manual 'GitHub/GitLab authentication' 'gh auth login / glab auth login; authentication state intentionally not queried'
 section DEVELOPMENT
 command_check optional Zed zed
