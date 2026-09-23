@@ -17,7 +17,11 @@ check_target() {
     [[ $(uname -m) == aarch64 && $(dpkg --print-architecture) == arm64 ]] || {
         log ERROR 'Requires native aarch64 kernel and arm64 dpkg; emulated amd64 is not supported.'; return 1;
     }
-    [[ $EUID != 0 ]] || { log ERROR 'Run as the normal desktop user, without sudo; individual operations use sudo.'; return 1; }
+    if [[ $EUID == 0 ]]; then
+        [[ -n ${WS_AS_USER:-} ]] || { log ERROR 'Root execution requires --as-user ACCOUNT.'; return 1; }
+        return
+    fi
+    [[ -z ${WS_AS_USER:-} ]] || { log ERROR '--as-user must be launched from root.'; return 1; }
     [[ -d $HOME && -O $HOME ]] || { log ERROR 'HOME must belong to the invoking user.'; return 1; }
     [[ $(getent passwd "$(id -u)" | cut -d: -f6) == "$HOME" ]] || {
         log ERROR 'HOME differs from the account home; refusing ambiguous user installation.'; return 1;

@@ -67,6 +67,21 @@ Desktop, Portainer, Ollama, LLM models or global Node.js is installed.
 ./bootstrap.sh --dry-run --only dev
 ```
 
+After account hardening removes `sudo`, update the checkout with the normal
+account, then run the bootstrap as root while targeting that account. For a
+daily account named `jonathan`:
+
+```bash
+git pull
+su - root
+cd /home/jonathan/workstation-arm
+./bootstrap.sh --as-user jonathan
+```
+
+`--as-user` keeps system changes under root while applying user configuration,
+Flatpaks and desktop files to the named normal account. It does not reopen the
+account-password screens or restore `sudo`.
+
 One `--only` or `--skip` filter is accepted; unknown/ambiguous options fail before
 changes. `desktop` selects desktop applications; `kde` selects the desktop
 session; `dev` selects development GUI applications. `--only shell` installs the

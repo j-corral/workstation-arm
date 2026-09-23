@@ -8,11 +8,11 @@ shell_install() {
     managed_block "$HOME/.zshrc" shell "$WS_ROOT/config/zshrc"
     local shell_path
     shell_path=$(command -v zsh)
-    if [[ $(getent passwd "$(id -u)" | cut -d: -f7) != "$shell_path" ]]; then
+    if [[ $(getent passwd "$(workstation_user)" | cut -d: -f7) != "$shell_path" ]]; then
         grep -Fxq "$shell_path" /etc/shells
-        sudo chsh -s "$shell_path" "$(id -un)"
+        sudo chsh -s "$shell_path" "$(workstation_user)"
     fi
-    [[ $(getent passwd "$(id -u)" | cut -d: -f7) == "$shell_path" ]]
+    [[ $(getent passwd "$(workstation_user)" | cut -d: -f7) == "$shell_path" ]]
     manual Zsh 'Log out and back in. Review project .envrc/mise configuration before granting trust. mise itself is installed by runtimes.'
 }
 main() { component required Zsh shell_install 'Install Zsh, set login shell and merge one managed section with direnv/mise/fzf hooks.'; }

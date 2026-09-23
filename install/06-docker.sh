@@ -42,8 +42,8 @@ PYTHON
     sudo docker --host unix:///var/run/docker.sock version
     docker compose version
     docker buildx version
-    sudo usermod -aG docker "$(id -un)"
-    id -nG "$(id -un)" | tr ' ' '\n' | grep -qx docker
+    sudo usermod -aG docker "$(workstation_user)"
+    id -nG "$(workstation_user)" | tr ' ' '\n' | grep -qx docker
     # shellcheck disable=SC2016 # Keep command substitutions for future Zsh sessions.
     cat > "$WS_TMP/docker-identity.zsh" <<'ZSH'
 export DOCKER_UID="$(id -u)"

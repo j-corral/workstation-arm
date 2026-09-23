@@ -64,10 +64,10 @@ solaar_install() {
 bitwarden_install() {
     apt_install flatpak
     need_commands flatpak
-    flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub com.bitwarden.desktop
+    as_workstation_user flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    as_workstation_user flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub com.bitwarden.desktop
     # --show-arch is not available in Flatpak 1.16 shipped by Ubuntu 26.04.
-    flatpak info --user --show-ref com.bitwarden.desktop | grep -Fxq 'app/com.bitwarden.desktop/aarch64/stable' || { fail 'Bitwarden Flatpak is not aarch64.'; return 1; }
+    as_workstation_user flatpak info --user --show-ref com.bitwarden.desktop | grep -Fxq 'app/com.bitwarden.desktop/aarch64/stable' || { fail 'Bitwarden Flatpak is not aarch64.'; return 1; }
     manual Bitwarden 'Open the desktop app and sign in interactively; no vault credentials are handled by bootstrap.'
 }
 keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
@@ -78,9 +78,9 @@ kwallet_install() {
 obsidian_install() {
     apt_install flatpak
     need_commands flatpak
-    flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub md.obsidian.Obsidian
-    flatpak info --user --show-ref md.obsidian.Obsidian | grep -Fxq 'app/md.obsidian.Obsidian/aarch64/stable' || { fail 'Obsidian Flatpak is not aarch64.'; return 1; }
+    as_workstation_user flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    as_workstation_user flatpak install --user --noninteractive --assumeyes --arch=aarch64 flathub md.obsidian.Obsidian
+    as_workstation_user flatpak info --user --show-ref md.obsidian.Obsidian | grep -Fxq 'app/md.obsidian.Obsidian/aarch64/stable' || { fail 'Obsidian Flatpak is not aarch64.'; return 1; }
     # Replace only the old launcher this bootstrap created; do not touch vaults
     # or the extracted AppImage payload, which may be useful for rollback.
     local legacy="$HOME/.local/share/applications/workstation-obsidian.desktop"

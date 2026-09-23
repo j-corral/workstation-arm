@@ -5,6 +5,16 @@ source "$WS_ROOT/lib/logging.sh"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
 fail() { log ERROR "$*"; return 1; }
+workstation_user() { printf '%s' "${WS_AS_USER:-$(id -un)}"; }
+as_workstation_user() {
+    local runtime_dir
+    if [[ -n ${WS_AS_USER:-} ]]; then
+        runtime_dir="/run/user/$(id -u "$WS_AS_USER")"
+        runuser -u "$WS_AS_USER" -- env HOME="$HOME" XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}" XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}" XDG_RUNTIME_DIR="$runtime_dir" "$@"
+    else
+        "$@"
+    fi
+}
 apt_wait_for_locks() {
     local deadline=$((SECONDS + 300))
     command -v fuser >/dev/null 2>&1 || return

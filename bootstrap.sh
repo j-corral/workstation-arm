@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 umask 077
 WS_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-export WS_ROOT WS_DRY_RUN=0 WS_REPORT='' WS_CONFIGURE=0
+export WS_ROOT WS_DRY_RUN=0 WS_REPORT='' WS_CONFIGURE=0 WS_AS_USER=''
 # shellcheck source=lib/common.sh
 source "$WS_ROOT/lib/common.sh"
 # shellcheck source=lib/accounts.sh
@@ -11,7 +11,7 @@ source "$WS_ROOT/lib/accounts.sh"
 source "$WS_ROOT/lib/detection.sh"
 modules=(system kde shell git runtimes docker dev desktop network security ai accounts)
 files=(01-system.sh 02-kde.sh 03-shell.sh 04-git-ssh.sh 05-runtimes.sh 06-docker.sh 07-dev-tools.sh 08-desktop-apps.sh 09-network.sh 10-security.sh 11-ai.sh 12-accounts.sh)
-only='' skip='' current=preflight
+only='' skip='' as_user='' current=preflight
 valid_module() {
     local candidate
     for candidate in "${modules[@]}"; do
@@ -21,7 +21,7 @@ valid_module() {
 }
 usage() {
     cat <<'HELP'
-Usage: ./bootstrap.sh [--dry-run] [--configure] [--only MODULE | --skip MODULE]
+Usage: ./bootstrap.sh [--dry-run] [--configure] [--as-user ACCOUNT] [--only MODULE | --skip MODULE]
 Modules: system kde shell git runtimes docker dev desktop network security ai accounts
 One filter is allowed. Minimal transport dependencies are always installed.
 Dry-run is an offline plan: no writes, sudo, downloads or target validation.
@@ -31,6 +31,10 @@ while (( $# )); do
     case $1 in
         --dry-run) WS_DRY_RUN=1; shift ;;
         --configure) WS_CONFIGURE=1; shift ;;
+        --as-user)
+            (( $# >= 2 )) || { usage; exit 2; }
+            [[ -z $as_user ]] || { usage; exit 2; }
+            as_user=$2; shift 2 ;;
         --only|--skip)
             (( $# >= 2 )) || { usage; exit 2; }
             [[ -z $only && -z $skip ]] || { usage; exit 2; }
@@ -41,6 +45,14 @@ while (( $# )); do
         *) usage; exit 2 ;;
     esac
 done
+if [[ -n $as_user ]]; then
+    [[ $EUID == 0 && $as_user =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] || { usage; exit 2; }
+    target_home=$(getent passwd "$as_user" | cut -d: -f6)
+    [[ $target_home == /home/* && -d $target_home ]] || { log ERROR "Invalid target account: $as_user"; exit 2; }
+    WS_AS_USER=$as_user
+    HOME=$target_home USER=$as_user LOGNAME=$as_user XDG_CONFIG_HOME="$target_home/.config" XDG_DATA_HOME="$target_home/.local/share" XDG_STATE_HOME="$target_home/.local/state"
+    export WS_AS_USER HOME USER LOGNAME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME
+fi
 if [[ $WS_DRY_RUN == 0 ]]; then
     check_target
     check_awk
@@ -87,6 +99,10 @@ finish() {
     else
         printf '\nDry-run complete. Nothing installed; target/package availability not validated.\n'
     fi
+    if [[ -n ${WS_AS_USER:-} ]]; then
+        chown -R "$WS_AS_USER:$WS_AS_USER" "$HOME/.config" "$HOME/.local" "$HOME/.ssh" 2>/dev/null || true
+        [[ ! -e $HOME/.zshrc ]] || chown "$WS_AS_USER:$WS_AS_USER" "$HOME/.zshrc"
+    fi
     exit "$rc"
 }
 trap finish EXIT
@@ -98,12 +114,16 @@ if [[ $WS_DRY_RUN == 0 ]]; then
     apt_update
     apt_install ca-certificates curl gnupg python3 unzip xz-utils tar file whiptail
     configure_optional_components "${only:-all}"
-    if [[ -z $only || $only == accounts ]]; then configure_login_credentials; fi
+    if [[ -z $WS_AS_USER && ( -z $only || $only == accounts ) ]]; then configure_login_credentials; fi
 else
     log PLANNED 'Preflight: Ubuntu 26.04/aarch64, sudo, HTTPS connectivity, disk; apt update; minimal transport dependencies.'
 fi
 for index in "${!modules[@]}"; do
     current=${modules[$index]}
+    if [[ -n $WS_AS_USER && $current == accounts ]]; then
+        record SKIPPED accounts 'Existing account separation retained during delegated root run.'
+        continue
+    fi
     if [[ $WS_DRY_RUN == 0 && -z $only && $current == desktop ]] && ! selected area_desktop; then
         record SKIPPED desktop 'Desktop applications not selected in configurator.'
         continue
