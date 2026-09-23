@@ -69,6 +69,9 @@ configure_selected_dock_launchers() {
     local joined
     joined=$(IFS=,; printf '%s' "${retained[*]}")
     kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --group Applets --group "$dock_applet" --group Configuration --group General --key launchers "$joined"
+    # Plasma visibility 1 is Auto Hide: reveal the bottom dock on pointer
+    # contact with the screen edge, while leaving the top menu visible.
+    kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --key visibility 1
 }
 
 configure_start_launcher_icon() {

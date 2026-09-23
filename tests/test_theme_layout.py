@@ -95,4 +95,5 @@ class ThemeLayoutTests(unittest.TestCase):
             self.assertNotIn('applications:bruno.desktop', write)
             self.assertIn('applications:md.obsidian.Obsidian.desktop', write)
             self.assertIn('applications:com.bitwarden.desktop', write)
+            self.assertIn('--key visibility 1', write)
             self.assertIn('--key icon view-grid', write)
