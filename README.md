@@ -233,9 +233,11 @@ end of a real run. In particular:
   display manager and Plasma Wayland is preselected at login. Sign in normally.
   The running session is not restarted; GNOME remains available as another session.
   Each rerun of the KDE module restores this boot/session preference.
-- Test resolution, scaling, suspend and Vulkan under Parallels. If necessary,
-  Ubuntu's `plasma-session-x11` is an available manual fallback:
-  `sudo apt-get install plasma-session-x11`. No unsupported graphics stack is added.
+- Test resolution, scaling, suspend and Vulkan under Parallels. The bootstrap
+  installs Plasma X11 alongside Wayland as a recovery session. If Parallels
+  **Use All Displays** makes Plasma Wayland stop accepting pointer clicks,
+  reboot or log out, select **Plasma (X11)** from SDDM's session chooser, then
+  sign in. Wayland remains the preselected session for normal single-display use.
 - Open Toolbox, test its GUI on 26.04, authenticate, and install only the required
   PhpStorm/PyCharm/Rider/etc. IDEs. Test Zed and Electron apps separately.
 

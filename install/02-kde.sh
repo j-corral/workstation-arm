@@ -2,8 +2,11 @@
 kde_install() {
     # SDDM's default greeter uses X11 even when the selected desktop is Wayland.
     # apt_install disables Recommends, so install its server/input driver explicitly.
-    apt_install kde-plasma-desktop plasma-session-wayland sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput x11-xserver-utils konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
-    need_commands plasmashell startplasma-wayland systemsettings kscreen-doctor xrandr
+    # Keep the official X11 Plasma session installed as a recovery path for
+    # Parallels multi-monitor bugs.  apt_install uses --no-install-recommends,
+    # therefore kwin-x11 must be listed explicitly.
+    apt_install kde-plasma-desktop plasma-session-wayland plasma-session-x11 kwin-x11 sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput x11-xserver-utils konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
+    need_commands plasmashell startplasma-wayland startplasma-x11 systemsettings kscreen-doctor xrandr
     [[ -x /usr/bin/X ]] || { fail 'SDDM X11 server /usr/bin/X is missing; display manager unchanged.'; return 1; }
     /usr/bin/X -version
     [[ -f /usr/share/sddm/themes/breeze/Main.qml ]] || { fail 'SDDM Breeze theme is missing'; return 1; }
@@ -11,13 +14,20 @@ kde_install() {
     # Use the highest-precedence local file; preserve its other settings.
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze
     kde_configure_login
+    kde_refresh_theme_login_hook
     manual KDE 'Reboot to use SDDM with Plasma Wayland preselected, then sign in normally and test Parallels graphics. The current session has not been restarted.'
-    if apt-cache show plasma-session-x11 >/dev/null 2>&1; then
-        manual 'KDE X11 fallback' 'If Wayland is unusable, install the official plasma-session-x11 package after checking its candidate; existing GNOME sessions remain.'
-    else
-        manual 'KDE session fallback' 'No Plasma X11 package found; use another existing supported login session if Parallels graphics fail.'
-    fi
+    manual 'KDE X11 fallback' 'Plasma X11 is installed as a Parallels multi-monitor recovery session. If Use All Displays makes the Wayland desktop stop accepting clicks, log out or reboot, choose Plasma (X11) in SDDM, and sign in. Existing GNOME sessions remain.'
 }
+
+kde_refresh_theme_login_hook() {
+    local autostart="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/workstation-mactahoe.desktop"
+    # A KDE-only rerun must deliver first-login compatibility fixes without
+    # downloading or reapplying the optional theme and resetting the layout.
+    [[ -f $autostart ]] || return 0
+    sudo install -d -m 0755 /usr/local/lib/workstation
+    sudo install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" /usr/local/lib/workstation/mactahoe-first-login
+}
+
 kde_configure_login() {
     local session='' entry entries sddm_home
     need_commands kwriteconfig6 sddm debconf-set-selections systemctl

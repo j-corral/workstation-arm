@@ -14,6 +14,11 @@ class LoginTests(unittest.TestCase):
         self.assertIn('systemsettings kscreen', source)
         self.assertIn('systemsettings kscreen-doctor', source)
         self.assertIn('x11-xserver-utils', source)
+        self.assertIn('plasma-session-x11 kwin-x11', source)
+        self.assertIn('startplasma-x11', source)
+        self.assertIn('Plasma X11 is installed as a Parallels multi-monitor recovery session', source)
+        self.assertIn('kde_refresh_theme_login_hook', source)
+        self.assertIn('without\n    # downloading or reapplying the optional theme', source)
         self.assertIn('DisplayCommand=/usr/local/lib/workstation/sddm-xsetup', source)
         self.assertIn('org.workstation.splash', source)
 

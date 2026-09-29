@@ -24,6 +24,20 @@ selected() {
     [[ -r $choices ]] && grep -Fxq "$name=1" "$choices"
 }
 
+enabled_output_count() {
+    command -v kscreen-doctor >/dev/null 2>&1 || return 1
+    local line output_seen=0 count=0
+    while IFS= read -r line; do
+        if [[ $line == Output:* ]]; then
+            output_seen=1
+        elif (( output_seen )) && [[ $line =~ ^[[:space:]]+enabled$ ]]; then
+            ((count += 1))
+            output_seen=0
+        fi
+    done < <(kscreen-doctor -o 2>/dev/null)
+    printf '%s\n' "$count"
+}
+
 configure_selected_dock_launchers() {
     local applets="$config_dir/plasma-org.kde.plasma.desktop-appletsrc"
     [[ -r $applets ]] || return 0
@@ -57,7 +71,7 @@ configure_selected_dock_launchers() {
     local current launcher known
     current=$(kreadconfig6 --file "$applets" --group Containments --group "$dock_containment" --group Applets --group "$dock_applet" --group Configuration --group General --key launchers 2>/dev/null || true)
     IFS=',' read -ra current_launchers <<< "$current"
-    for launcher in "${current_launchers[@]}"; do
+    for launcher in "${current_launchers[@]:-}"; do
         [[ -n $launcher ]] || continue
         known=0
         for managed_launcher in "${managed[@]}"; do
@@ -65,13 +79,25 @@ configure_selected_dock_launchers() {
         done
         (( known )) || retained+=("$launcher")
     done
-    retained+=("${selected_launchers[@]}")
-    local joined
-    joined=$(IFS=,; printf '%s' "${retained[*]}")
+    if [[ ${selected_launchers[0]+set} ]]; then
+        retained+=("${selected_launchers[@]}")
+    fi
+    local joined=''
+    if [[ ${retained[0]+set} ]]; then
+        joined=$(IFS=,; printf '%s' "${retained[*]}")
+    fi
     kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --group Applets --group "$dock_applet" --group Configuration --group General --key launchers "$joined"
-    # Plasma visibility 1 is Auto Hide: reveal the bottom dock on pointer
-    # contact with the screen edge, while leaving the top menu visible.
-    kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --key visibility 1
+    # Plasma visibility 1 is Auto Hide.  KWin/Wayland with Parallels virtual
+    # multi-display connectors can leave an auto-hidden panel above the pointer
+    # input surface.  Keep the macOS-style dock on one display, but use an
+    # always-visible panel when more than one output is enabled.
+    local outputs
+    outputs=$(enabled_output_count || true)
+    if [[ ${outputs:-0} -gt 1 ]]; then
+        kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --key visibility 0
+    else
+        kwriteconfig6 --file "$applets" --group Containments --group "$dock_containment" --key visibility 1
+    fi
 }
 
 configure_start_launcher_icon() {
