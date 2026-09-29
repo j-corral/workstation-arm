@@ -6,7 +6,7 @@ certification. Recheck these decisions when updating this repository.
 
 | Component | Official evidence | Decision |
 | --- | --- | --- |
-| Ubuntu base/KDE/Konsole/KeePassXC/Solaar/gh/glab/OpenSnitch | [Ubuntu resolute ARM64 universe index](https://ports.ubuntu.com/ubuntu-ports/dists/resolute/universe/binary-arm64/) | Native packages checked by signed Ubuntu APT at runtime. Plasma Wayland is preferred. Konsole remains the default terminal with a user-owned translucent profile. |
+| Ubuntu base/KDE/Konsole/KeePassXC/Solaar/gh/glab/OpenSnitch | [Ubuntu resolute ARM64 universe index](https://ports.ubuntu.com/ubuntu-ports/dists/resolute/universe/binary-arm64/) | Native packages checked by signed Ubuntu APT at runtime. Plasma X11 is preselected because it is validated with Parallels multi-display; Wayland remains installed as an opt-in alternative. Konsole remains the default terminal with a user-owned translucent profile. |
 | .NET 10 | [Microsoft Ubuntu guidance](https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-install), [Ubuntu main ARM64 index](https://ports.ubuntu.com/ubuntu-ports/dists/resolute/main/binary-arm64/) | Ubuntu `dotnet-sdk-10.0`, ARM64 package confirmed. No Microsoft .NET feed. |
 | Docker | [Official Ubuntu install](https://docs.docker.com/engine/install/ubuntu/) | Resolute and ARM64 explicitly listed; scoped keyring and official APT source. |
 | mise | [Official installation](https://mise.jdx.dev/installing-mise.html) | Preferred upstream binary distribution. We pin/extract its official ARM64 release instead of running the mutable mise.run script, preserving its single-binary layout. No PPA. |

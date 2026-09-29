@@ -94,7 +94,7 @@ set. This also happens with `--only`. Module order is fixed:
 | Module | Automatic work | Failure policy |
 | --- | --- | --- |
 | `system` | Build essentials, certificates, curl/wget, git/GPG, zip/unzip, lsof, vim, jq, rg, bat, fzf, btop, direnv, zsh, ncdu, SSH client | Required |
-| `kde` | `kde-plasma-desktop`, Wayland session, SDDM, Konsole, Dolphin, Plasma NetworkManager UI, KDE portal; French PC keyboard and NumLock | Required |
+| `kde` | `kde-plasma-desktop`, Plasma X11 and Wayland sessions, SDDM, Konsole, Dolphin, Plasma NetworkManager UI, KDE portal; French PC keyboard and NumLock | Required |
 | `shell` | Zsh login shell, managed `.zshrc` section, direnv/mise/fzf hooks | Required |
 | `git` | Ubuntu git, OpenSSH client, gh, glab; secure `.ssh` directory/config | Required |
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
@@ -230,14 +230,15 @@ Use the full [post-install checklist](docs/post-install.md), also printed at the
 end of a real run. In particular:
 
 - Reboot after the KDE module: SDDM is automatically selected as the boot
-  display manager and Plasma Wayland is preselected at login. Sign in normally.
+  display manager and Plasma X11 is preselected at login. Sign in normally.
   The running session is not restarted; GNOME remains available as another session.
   Each rerun of the KDE module restores this boot/session preference.
 - Test resolution, scaling, suspend and Vulkan under Parallels. The bootstrap
   installs Plasma X11 alongside Wayland as a recovery session. If Parallels
   **Use All Displays** makes Plasma Wayland stop accepting pointer clicks,
   reboot or log out, select **Plasma (X11)** from SDDM's session chooser, then
-  sign in. Wayland remains the preselected session for normal single-display use.
+  sign in. Plasma Wayland remains available from the SDDM session chooser after
+  its graphics and input behavior have been validated for the VM.
 - Open Toolbox, test its GUI on 26.04, authenticate, and install only the required
   PhpStorm/PyCharm/Rider/etc. IDEs. Test Zed and Electron apps separately.
 

@@ -15,8 +15,8 @@ kde_install() {
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze
     kde_configure_login
     kde_refresh_theme_login_hook
-    manual KDE 'Reboot to use SDDM with Plasma Wayland preselected, then sign in normally and test Parallels graphics. The current session has not been restarted.'
-    manual 'KDE X11 fallback' 'Plasma X11 is installed as a Parallels multi-monitor recovery session. If Use All Displays makes the Wayland desktop stop accepting clicks, log out or reboot, choose Plasma (X11) in SDDM, and sign in. Existing GNOME sessions remain.'
+    manual KDE 'Reboot to use SDDM with Plasma X11 preselected, then sign in normally and test Parallels graphics. The current session has not been restarted.'
+    manual 'KDE Wayland alternative' 'Plasma Wayland remains installed. Select it from SDDM only when its graphics and input behavior have been validated for this Parallels display configuration. Existing GNOME sessions remain.'
 }
 
 kde_refresh_theme_login_hook() {
@@ -31,17 +31,17 @@ kde_refresh_theme_login_hook() {
 kde_configure_login() {
     local session='' entry entries sddm_home
     need_commands kwriteconfig6 sddm debconf-set-selections systemctl
-    entries=$(dpkg-query -L plasma-session-wayland)
-    # Discover the packaged session name rather than assuming plasma/plasmawayland.
+    entries=$(dpkg-query -L plasma-session-x11)
+    # Discover the packaged session name rather than assuming plasmax11.
     while IFS= read -r entry; do
         case "$entry" in
-            /usr/share/wayland-sessions/plasma*.desktop)
+            /usr/share/xsessions/plasma*.desktop)
                 [[ -f $entry ]] || continue
-                [[ -z $session ]] || { fail 'Multiple Plasma Wayland session entries; cannot choose a default.'; return 1; }
+                [[ -z $session ]] || { fail 'Multiple Plasma X11 session entries; cannot choose a default.'; return 1; }
                 session=${entry##*/} ;;
         esac
     done <<< "$entries"
-    [[ -n $session ]] || { fail 'Plasma Wayland session entry is missing; display manager unchanged.'; return 1; }
+    [[ -n $session ]] || { fail 'Plasma X11 session entry is missing; display manager unchanged.'; return 1; }
     sddm_home=$(getent passwd sddm | cut -d: -f6)
     [[ $sddm_home == /* && -d $sddm_home ]] || { fail 'SDDM home directory is missing'; return 1; }
     sudo test ! -L "$sddm_home/state.conf"
@@ -95,7 +95,7 @@ keyboard_install() {
 }
 main() {
     component required Keyboard keyboard_install 'French PC AZERTY by default; enable NumLock at Plasma startup and for the SDDM X11 greeter.'
-    component required KDE kde_install 'Minimal Plasma desktop; select SDDM and Plasma Wayland for the next boot, preserving the running session.'
+    component required KDE kde_install 'Minimal Plasma desktop; select SDDM and Plasma X11 for the next boot, preserving the running session.'
     component optional MacTahoe mactahoe_install 'Pinned Plasma 6 desktop/SDDM theme; retain Breeze for recovery.'
 }
 

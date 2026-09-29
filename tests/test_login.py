@@ -16,7 +16,8 @@ class LoginTests(unittest.TestCase):
         self.assertIn('x11-xserver-utils', source)
         self.assertIn('plasma-session-x11 kwin-x11', source)
         self.assertIn('startplasma-x11', source)
-        self.assertIn('Plasma X11 is installed as a Parallels multi-monitor recovery session', source)
+        self.assertIn('Plasma X11 preselected', source)
+        self.assertIn('Plasma Wayland remains installed', source)
         self.assertIn('kde_refresh_theme_login_hook', source)
         self.assertIn('without\n    # downloading or reapplying the optional theme', source)
         self.assertIn('DisplayCommand=/usr/local/lib/workstation/sddm-xsetup', source)
@@ -40,9 +41,9 @@ class LoginTests(unittest.TestCase):
             sessions = work / 'sessions'
             sessions.mkdir()
             if present:
-                (sessions / 'plasma.desktop').touch()
+                (sessions / 'plasmax11.desktop').touch()
             source = (ROOT / 'install/02-kde.sh').read_text()
-            source = source.replace('/usr/share/wayland-sessions', str(sessions))
+            source = source.replace('/usr/share/xsessions', str(sessions))
             module = work / 'module.sh'
             module.write_text(source)
             script = r'''
@@ -50,7 +51,7 @@ set -Eeuo pipefail
 source "$TEST_DIR/module.sh"
 need_commands() { :; }
 fail() { printf '%s\n' "$*" >&2; return 1; }
-dpkg-query() { printf '%s/sessions/plasma.desktop\n' "$TEST_DIR"; }
+dpkg-query() { printf '%s/sessions/plasmax11.desktop\n' "$TEST_DIR"; }
 getent() { printf 'sddm:x:100:100::%s:/bin/false\n' "$TEST_DIR"; }
 sudo() {
     printf '%s\n' "$*" >> "$TEST_DIR/calls"
@@ -68,7 +69,7 @@ kde_configure_login
     def test_selects_sddm_without_interrupting_session(self):
         result, calls = self.run_selection(True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('--group Last --key Session plasma.desktop', calls)
+        self.assertIn('--group Last --key Session plasmax11.desktop', calls)
         self.assertIn('shared/default-x-display-manager select sddm', calls)
         self.assertIn('systemctl enable --force sddm.service', calls)
         self.assertIn('systemctl set-default graphical.target', calls)

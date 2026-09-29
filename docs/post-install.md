@@ -1,11 +1,11 @@
 
 Post-install manual checklist (only for applicable installed components):
-[ ] Reboot after the KDE module; SDDM and Plasma Wayland are selected automatically
+[ ] Reboot after the KDE module; SDDM and Plasma X11 are selected automatically
 [ ] Sign in normally and confirm the Plasma desktop opens
 [ ] After reboot, confirm French PC AZERTY and NumLock in Plasma; test the login screen separately
 [ ] Test Parallels graphics/resolution and Zed Vulkan support; use VS Code if unsupported
 [ ] Open Konsole and verify the translucent Workstation profile
-[ ] In Plasma Wayland, optionally open Foot and verify its translucent theme
+[ ] Optionally select Plasma Wayland from SDDM and verify its graphics, input and Foot terminal behavior before using it daily
 [ ] Open local DOCX, XLSX and PPTX files in ONLYOFFICE
 [ ] Attach Logitech receiver to guest or pair with Bluetooth; run solaar show
 [ ] Open Bitwarden from Plasma and sign in; confirm the vault unlocks
