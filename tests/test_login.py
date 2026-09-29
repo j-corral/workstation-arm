@@ -20,6 +20,8 @@ class LoginTests(unittest.TestCase):
         self.assertIn('Plasma Wayland remains installed', source)
         self.assertIn('kde_refresh_theme_login_hook', source)
         self.assertIn('without\n    # downloading or reapplying the optional theme', source)
+        self.assertIn('kde_disable_kwallet', source)
+        self.assertIn('--key Enabled false', source)
         self.assertIn('DisplayCommand=/usr/local/lib/workstation/sddm-xsetup', source)
         self.assertIn('org.workstation.splash', source)
 

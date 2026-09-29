@@ -100,7 +100,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker; current developer added to the Docker group | Docker required; TUI optional; Docker group is root-equivalent |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Konsole, Foot, KeePassXC and KWallet; Obsidian, ONLYOFFICE, Bruno, Solaar and Bitwarden are selected in the configurator | Optional; Proton Mail skipped |
+| `desktop` | Konsole, Foot and KeePassXC; Obsidian, ONLYOFFICE, Bruno, Solaar and Bitwarden are selected in the configurator | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
@@ -373,10 +373,9 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
   Flatseal. If Obsidian or Bruno hits an AppArmor/Electron sandbox
   restriction, use vendor/IT guidance
   for a scoped policy; do not disable AppArmor or pass `--no-sandbox` globally.
-- If Plasma opens KWallet with “no keys suitable for encryption,” the GPG wallet
-  option has no usable GPG key. Select **Classic (Blowfish encrypted file)** and
-  set a private wallet password in the dialog. The desktop module installs
-  KWallet Manager but does not generate a GPG identity or store a password.
+- KWallet is disabled because its Ubuntu 26.04 manager can fail to create a
+  wallet. Use Bitwarden or KeePassXC instead; the bootstrap does not remove any
+  pre-existing KWallet data.
 - A checksum mismatch stops installation. Investigate changed vendor bytes,
   corruption or proxy behavior; never bypass the check. No downloaded binary is
   committed to this repository.

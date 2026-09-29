@@ -123,10 +123,6 @@ bitwarden_install() {
     manual Bitwarden 'Open the desktop app and sign in interactively; no vault credentials are handled by bootstrap.'
 }
 keepassxc_install() { apt_install keepassxc; need_commands keepassxc; }
-kwallet_install() {
-    apt_install kwalletmanager
-    manual KWallet 'On first prompt, choose Classic (Blowfish encrypted file) and set a private wallet password. GPG mode requires an existing encryption-capable GPG key; bootstrap does not create one or store a password.'
-}
 obsidian_install() {
     apt_install flatpak
     need_commands flatpak
@@ -143,7 +139,6 @@ main() {
     component optional 'Konsole translucent terminal' konsole_install 'Default KDE terminal with a user-owned translucent profile.'
     component optional 'Foot terminal' foot_install 'Optional native ARM64 Wayland terminal with translucent color theme; Konsole remains default.'
     component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
-    component optional 'KWallet Manager' kwallet_install 'Manage Plasma secrets interactively; no automatic wallet/password creation.'
     if selected desktop_obsidian; then component optional Obsidian obsidian_install 'Selected ARM64 Flatpak.'; else record SKIPPED Obsidian 'Not selected in configurator.'; fi
     if selected desktop_onlyoffice; then component optional ONLYOFFICE onlyoffice_install 'Selected local Office editor.'; else record SKIPPED ONLYOFFICE 'Not selected in configurator.'; fi
     if selected desktop_solaar; then component optional Solaar solaar_install 'Selected Logitech manager.'; else record SKIPPED Solaar 'Not selected in configurator.'; fi

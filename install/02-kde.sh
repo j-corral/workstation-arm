@@ -14,9 +14,19 @@ kde_install() {
     # Use the highest-precedence local file; preserve its other settings.
     sudo kwriteconfig6 --file /etc/sddm.conf --group Theme --key Current breeze
     kde_configure_login
+    kde_disable_kwallet
     kde_refresh_theme_login_hook
     manual KDE 'Reboot to use SDDM with Plasma X11 preselected, then sign in normally and test Parallels graphics. The current session has not been restarted.'
     manual 'KDE Wayland alternative' 'Plasma Wayland remains installed. Select it from SDDM only when its graphics and input behavior have been validated for this Parallels display configuration. Existing GNOME sessions remain.'
+}
+
+kde_disable_kwallet() {
+    # Ubuntu 26.04's KWallet manager can leave an empty UI and fail to create
+    # wallets.  Do not route desktop secrets to a broken local wallet; users
+    # keep Bitwarden or KeePassXC as their explicit secret stores instead.
+    kwriteconfig6 --file kwalletrc --group Wallet --key Enabled false
+    [[ $(kreadconfig6 --file kwalletrc --group Wallet --key Enabled) == false ]]
+    manual KWallet 'Disabled because the Ubuntu 26.04 KWallet manager cannot reliably create wallets. Use Bitwarden or KeePassXC; no secret data was removed.'
 }
 
 kde_refresh_theme_login_hook() {

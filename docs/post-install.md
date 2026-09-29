@@ -13,7 +13,7 @@ Post-install manual checklist (only for applicable installed components):
 [ ] Set client-specific Git identity; gh auth login; glab auth login
 [ ] Open Toolbox, authenticate JetBrains and select needed IDEs
 [ ] Validate GUI apps, including Obsidian's extracted Electron build
-[ ] At the first KWallet prompt, select Classic (Blowfish) and set a wallet password; GPG mode needs an existing encryption-capable key
+[ ] Confirm no KWallet prompt appears; use Bitwarden or KeePassXC for credentials
 [ ] Authenticate Tailscale only if approved by client IT
 [ ] Run sudo ./tools/dns_status.sh; after connecting the client VPN, confirm private names and external DNS still resolve
 [ ] Optional account separation: run `./bootstrap.sh --only accounts`. It prompts for the normal desktop account, enables/verifies terminal-only root administration, then removes `sudo`. The chosen developer retains Docker/lazydocker access, which is root-equivalent. Administer other system tasks with `su - root`, run the command directly, then `exit`.
