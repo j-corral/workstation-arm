@@ -5,8 +5,8 @@ kde_install() {
     # Keep the official X11 Plasma session installed as a recovery path for
     # Parallels multi-monitor bugs.  apt_install uses --no-install-recommends,
     # therefore kwin-x11 must be listed explicitly.
-    apt_install kde-plasma-desktop plasma-session-wayland plasma-session-x11 kwin-x11 sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput x11-xserver-utils konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
-    need_commands plasmashell startplasma-wayland startplasma-x11 systemsettings kscreen-doctor xrandr
+    apt_install kde-plasma-desktop plasma-session-wayland plasma-session-x11 kwin-x11 sddm sddm-theme-breeze xserver-xorg-core xserver-xorg-input-libinput x11-xserver-utils x11-utils konsole dolphin plasma-nm xdg-desktop-portal-kde libkf6config-bin systemsettings kscreen
+    need_commands plasmashell startplasma-wayland startplasma-x11 systemsettings kscreen-doctor xrandr xev
     [[ -x /usr/bin/X ]] || { fail 'SDDM X11 server /usr/bin/X is missing; display manager unchanged.'; return 1; }
     /usr/bin/X -version
     [[ -f /usr/share/sddm/themes/breeze/Main.qml ]] || { fail 'SDDM Breeze theme is missing'; return 1; }

@@ -14,6 +14,8 @@ class LoginTests(unittest.TestCase):
         self.assertIn('systemsettings kscreen', source)
         self.assertIn('systemsettings kscreen-doctor', source)
         self.assertIn('x11-xserver-utils', source)
+        self.assertIn('x11-utils', source)
+        self.assertIn('xev', source)
         self.assertIn('plasma-session-x11 kwin-x11', source)
         self.assertIn('startplasma-x11', source)
         self.assertIn('Plasma X11 preselected', source)

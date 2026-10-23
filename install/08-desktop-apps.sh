@@ -109,9 +109,18 @@ onlyoffice_install() {
     manual ONLYOFFICE 'Open a local DOCX, XLSX and PPTX in Plasma to validate the GUI and file associations.'
 }
 solaar_install() {
-    apt_install solaar
-    need_commands solaar
-    manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Keys S and MX Anywhere 2 settings depend on the detected HID++ features.'
+    apt_install solaar libkf6config-bin
+    need_commands solaar kwriteconfig6 kreadconfig6
+    # These are the generic side-button names Plasma uses for HID mice. They
+    # work independently of Solaar, including when an MX Anywhere is paired
+    # by Bluetooth instead of through a Logitech receiver.
+    kwriteconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton1 'Key,Meta+Ctrl+Right'
+    kwriteconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton2 'Key,Meta+Ctrl+Left'
+    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key 'Switch One Desktop to the Right' 'Meta+Ctrl+Right,Meta+Ctrl+Right,Switch One Desktop to the Right'
+    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key 'Switch One Desktop to the Left' 'Meta+Ctrl+Left,Meta+Ctrl+Left,Switch One Desktop to the Left'
+    [[ $(kreadconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton1) == 'Key,Meta+Ctrl+Right' ]]
+    [[ $(kreadconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton2) == 'Key,Meta+Ctrl+Left' ]]
+    manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Anywhere side buttons are mapped to next/previous Plasma virtual desktop; log out/in after this configuration. If they do not react, run xev -event button in Plasma X11 while pressing each button: Parallels must forward the button events to the guest.'
 }
 bitwarden_install() {
     apt_install flatpak

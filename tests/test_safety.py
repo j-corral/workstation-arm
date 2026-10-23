@@ -80,12 +80,23 @@ printf 'CONTINUED'
         self.assertIn('Font=JetBrains Mono,12', desktop)
         self.assertIn('Color=248,250,252', desktop)
 
-    def test_zsh_uses_current_directory_prompt_and_syntax_highlighting(self):
+    def test_zsh_uses_current_directory_git_prompt_and_syntax_highlighting(self):
         shell = (ROOT / 'install/03-shell.sh').read_text()
         zshrc = (ROOT / 'config/zshrc').read_text()
         self.assertIn('zsh-syntax-highlighting', shell)
-        self.assertIn("PROMPT='%F{cyan}%~%f %# '", zshrc)
+        self.assertIn('autoload -Uz vcs_info', zshrc)
+        self.assertIn("PROMPT='%F{cyan}%~%f${vcs_info_msg_0_} %# '", zshrc)
+        self.assertIn("alias ls='ls --color=auto'", zshrc)
         self.assertIn('/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh', zshrc)
+
+    def test_solaar_maps_generic_side_buttons_to_plasma_virtual_desktops(self):
+        desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
+        self.assertIn('--group ButtonRebinds --group Mouse --key ExtraButton1', desktop)
+        self.assertIn("'Key,Meta+Ctrl+Right'", desktop)
+        self.assertIn('--group ButtonRebinds --group Mouse --key ExtraButton2', desktop)
+        self.assertIn("'Key,Meta+Ctrl+Left'", desktop)
+        self.assertIn("'Switch One Desktop to the Right'", desktop)
+        self.assertIn("'Switch One Desktop to the Left'", desktop)
 
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
