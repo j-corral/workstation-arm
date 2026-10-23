@@ -7,6 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'config/mactahoe-first-login.sh'
+GTK_SETTINGS = ROOT / 'tools/gtk_settings.py'
 
 
 class ThemeLayoutTests(unittest.TestCase):
@@ -137,3 +138,14 @@ class ThemeLayoutTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn('--key visibility 0', (home / 'write').read_text())
+
+    def test_gtk_global_menu_module_is_removed_without_changing_other_modules(self):
+        with tempfile.TemporaryDirectory() as directory:
+            settings = Path(directory) / 'settings.ini'
+            settings.write_text('[Settings]\ngtk-modules=colorreload-gtk-module:appmenu-gtk-module:window-decorations-gtk-module\n')
+            result = subprocess.run(['python3', str(GTK_SETTINGS), str(settings)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                settings.read_text(),
+                '[Settings]\ngtk-modules=colorreload-gtk-module:window-decorations-gtk-module\n',
+            )

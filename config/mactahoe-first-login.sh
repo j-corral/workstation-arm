@@ -24,6 +24,13 @@ selected() {
     [[ -r $choices ]] && grep -Fxq "$name=1" "$choices"
 }
 
+disable_unsafe_gtk_appmenu() {
+    local sanitizer=${WORKSTATION_GTK_SETTINGS:-/usr/local/lib/workstation/gtk-settings}
+    local gtk_settings="$config_dir/gtk-3.0/settings.ini"
+    [[ -x $sanitizer && -f $gtk_settings ]] || return 0
+    "$sanitizer" "$gtk_settings"
+}
+
 enabled_output_count() {
     command -v kscreen-doctor >/dev/null 2>&1 || return 1
     local line output_seen=0 count=0
@@ -126,3 +133,6 @@ configure_start_launcher_icon() {
 # Plasma login so rerunning the configurator changes the dock without a reset.
 configure_selected_dock_launchers
 configure_start_launcher_icon
+# Ubuntu 26.04's GTK3 global-menu module can crash Chromium-based browsers.
+# Keep the Plasma top panel but let GTK applications render their own menus.
+disable_unsafe_gtk_appmenu

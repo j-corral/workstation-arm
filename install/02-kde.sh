@@ -36,6 +36,7 @@ kde_refresh_theme_login_hook() {
     [[ -f $autostart ]] || return 0
     sudo install -d -m 0755 /usr/local/lib/workstation
     sudo install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" /usr/local/lib/workstation/mactahoe-first-login
+    sudo install -m 0755 "$WS_ROOT/tools/gtk_settings.py" /usr/local/lib/workstation/gtk-settings
 }
 
 kde_configure_login() {
@@ -148,6 +149,7 @@ mactahoe_install() {
     # outside its home so its absolute Exec path remains valid after that move.
     sudo install -d -m 0755 /usr/local/lib/workstation
     sudo install -m 0755 "$WS_ROOT/config/mactahoe-first-login.sh" /usr/local/lib/workstation/mactahoe-first-login
+    sudo install -m 0755 "$WS_ROOT/tools/gtk_settings.py" /usr/local/lib/workstation/gtk-settings
     sed 's|Exec=PLACEHOLDER|Exec=/usr/local/lib/workstation/mactahoe-first-login|' "$WS_ROOT/config/mactahoe-first-login.desktop" > "$WS_TMP/mactahoe.desktop"
     install -m 0644 "$WS_TMP/mactahoe.desktop" "$config_dir/autostart/workstation-mactahoe.desktop"
     /usr/local/lib/workstation/mactahoe-first-login

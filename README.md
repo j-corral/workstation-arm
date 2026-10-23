@@ -376,6 +376,9 @@ and ARM64, with no container network or host mounts. No Docker cleanup is run.
 - KWallet is disabled because its Ubuntu 26.04 manager can fail to create a
   wallet. Use Bitwarden or KeePassXC instead; the bootstrap does not remove any
   pre-existing KWallet data.
+- GTK global-menu integration is disabled for GTK3 applications because the
+  Ubuntu 26.04 `appmenu-gtk-module` can crash Chromium-based browsers. Chrome
+  and Firefox retain their menu bars inside their windows.
 - A checksum mismatch stops installation. Investigate changed vendor bytes,
   corruption or proxy behavior; never bypass the check. No downloaded binary is
   committed to this repository.
