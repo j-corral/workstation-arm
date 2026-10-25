@@ -1,0 +1,37 @@
+# Playwright starts locally. npx retrieves the current MCP package on first
+# use, so no global JavaScript package is installed or trusted by bootstrap.
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+startup_timeout_sec = 60
+
+# Local RAG searches only the dedicated document directory. Its index and
+# embedding-model cache also stay in the daily user's home directory.
+[mcp_servers.local-rag]
+command = "npx"
+args = ["-y", "mcp-local-rag"]
+startup_timeout_sec = 120
+
+[mcp_servers.local-rag.env]
+BASE_DIR = "@LOCAL_RAG_BASE_DIR@"
+DB_PATH = "@LOCAL_RAG_DB_PATH@"
+CACHE_DIR = "@LOCAL_RAG_CACHE_DIR@"
+
+# Lightpanda is a local, headless browser MCP server. Codex requires an
+# absolute executable path because MCP subprocesses do not inherit shell PATH.
+# Bootstrap installs the verified ARM64 Lightpanda binary at this path.
+[mcp_servers.lightpanda]
+command = "@LIGHTPANDA_BINARY@"
+args = ["mcp", "--obey-robots"]
+env = { LIGHTPANDA_DISABLE_TELEMETRY = "true" }
+startup_timeout_sec = 20
+
+# OAuth credentials are created only by `codex mcp login`; bootstrap neither
+# authenticates nor stores a GitLab or Plane token.
+[mcp_servers.gitlab]
+url = "https://gitlab.com/api/v4/mcp"
+startup_timeout_sec = 20
+
+[mcp_servers.plane]
+url = "https://mcp.plane.so/http/mcp"
+startup_timeout_sec = 20

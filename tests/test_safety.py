@@ -231,8 +231,43 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn('ensure_codex_lmstudio_config', (ROOT / 'install/11-ai.sh').read_text())
         self.assertIn('Refusing symlink Codex configuration path.', (ROOT / 'lib/common.sh').read_text())
         self.assertIn('model_provider = "mac_lmstudio"', lmstudio)
+        self.assertIn('model = "qwen/qwen3.8-27b"', lmstudio)
         self.assertIn('base_url = "http://192.168.1.25:1234/v1"', lmstudio)
         self.assertIn('# model_provider = "openai"', lmstudio)
+        catalog = json.loads((ROOT / 'config/codex-model-catalog.json').read_text())
+        self.assertEqual(
+            [model['slug'] for model in catalog['models']],
+            ['qwen/qwen3.8-27b', 'qwen/qwen3-4b-2507'],
+        )
+        self.assertEqual(catalog['models'][0]['priority'], 1)
+        self.assertEqual(catalog['models'][1]['priority'], 2)
+        mcp = (ROOT / 'config/codex-mcp.toml').read_text()
+        self.assertNotIn('context7.com', mcp)
+        self.assertIn('[mcp_servers.playwright]', mcp)
+        self.assertIn('command = "npx"', mcp)
+        self.assertIn('@playwright/mcp@latest', mcp)
+        self.assertIn('[mcp_servers.local-rag]', mcp)
+        self.assertIn('command = "npx"', mcp)
+        self.assertIn('mcp-local-rag', mcp)
+        self.assertIn('@LOCAL_RAG_BASE_DIR@', mcp)
+        self.assertIn('[mcp_servers.lightpanda]', mcp)
+        self.assertIn('command = "@LIGHTPANDA_BINARY@"', mcp)
+        self.assertIn('LIGHTPANDA_DISABLE_TELEMETRY', mcp)
+        self.assertIn('[mcp_servers.gitlab]', mcp)
+        self.assertIn('https://gitlab.com/api/v4/mcp', mcp)
+        self.assertIn('[mcp_servers.plane]', mcp)
+        self.assertIn('https://mcp.plane.so/http/mcp', mcp)
+        self.assertIn('managed_block "$codex_config" codex-mcp', (ROOT / 'lib/common.sh').read_text())
+        self.assertIn('manage_codex_model_catalog.py', (ROOT / 'lib/common.sh').read_text())
+        self.assertIn('apt_install nodejs npm', (ROOT / 'install/11-ai.sh').read_text())
+        self.assertIn('locked_download lightpanda', (ROOT / 'install/11-ai.sh').read_text())
+        self.assertIn('install_binary_archive rtk rtk rtk', (ROOT / 'install/11-ai.sh').read_text())
+        self.assertIn('rtk init --global --codex', (ROOT / 'install/11-ai.sh').read_text())
+        downloads = json.loads((ROOT / 'config/downloads.json').read_text())
+        self.assertEqual(downloads['lightpanda']['version'], '1.0.2')
+        self.assertEqual(downloads['lightpanda']['digest'], 'ac546dfc43c533430da92b75ab36f2a29da7d6324d5d38baf606ef2e0d849345')
+        self.assertEqual(downloads['rtk']['version'], 'v1.0.1')
+        self.assertEqual(downloads['rtk']['digest'], 'cd627c4091ad90b5e5aca83ca5af66ee4b8aa8537a736533fa90544f461f1c2b')
         self.assertIn("package_check 'ChatGPT desktop' chatgpt", verify)
 
     def test_delegated_root_run_returns_codex_configuration_to_daily_user(self):
@@ -309,7 +344,9 @@ touch "$WS_TEST_DIR/executed"
 
     def test_locks_have_explicit_architecture_and_digest(self):
         locks = json.loads((ROOT / 'config/downloads.json').read_text())
-        self.assertEqual(len(locks), 11)
+        self.assertEqual(len(locks), 13)
+        self.assertIn('lightpanda', locks)
+        self.assertIn('rtk', locks)
         for item in locks.values():
             self.assertTrue(item['url'].startswith('https://'))
             if item.get('architecture') == 'all':

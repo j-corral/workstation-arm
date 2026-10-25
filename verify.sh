@@ -163,7 +163,34 @@ manual 'Network enrollment/rules' 'Authenticate only with client approval; revie
 manual 'Bitdefender GravityZone BEST' 'Client IT must supply/install/enroll its private Linux ARM64 kit; check systemctl status bdsec* after installation.'
 section AI
 command_check optional 'Codex CLI' codex
+codex_catalog="${CODEX_HOME:-$HOME/.codex}/workstation-model-catalog.json"
+if [[ -f $codex_catalog ]] && python3 - "$codex_catalog" <<'PY' >/dev/null 2>&1
+import json, sys
+catalog = json.load(open(sys.argv[1]))
+assert [model['slug'] for model in catalog['models']] == ['qwen/qwen3.8-27b', 'qwen/qwen3-4b-2507']
+PY
+then
+    ok 'Codex LM Studio catalog' 'Qwen 27B Code and Qwen 4B Quotidien are available for selection'
+else
+    warn 'Codex LM Studio catalog' 'not installed or malformed'
+fi
 command_check optional 'Claude Code' claude
+command_check optional RTK rtk
+if [[ -f ${CODEX_HOME:-$HOME/.codex}/hooks.json ]] && grep -q 'rtk hook codex' "${CODEX_HOME:-$HOME/.codex}/hooks.json"; then
+    ok 'RTK Codex hook' 'global command-output filtering configured; telemetry disabled by bootstrap'
+else
+    warn 'RTK Codex hook' 'not configured'
+fi
+if [[ -d $HOME/Documents/Local-RAG && -d $HOME/.local/share/workstation/local-rag ]]; then
+    ok 'Local RAG' "$HOME/Documents/Local-RAG is the dedicated local document root; first MCP use downloads its embedding model"
+else
+    warn 'Local RAG' 'managed document root or index directory is missing'
+fi
+if command -v lightpanda >/dev/null && timeout 30 env LIGHTPANDA_DISABLE_TELEMETRY=true lightpanda version >/dev/null 2>&1; then
+    ok Lightpanda 'verified ARM64 browser executable found; telemetry disabled for Codex MCP'
+else
+    warn Lightpanda 'not installed or version command failed'
+fi
 if [[ -n $lm_host ]]; then
     if [[ ! $lm_host =~ ^https?://[A-Za-z0-9.:-]+$ ]]; then
         bad 'Mac LM Studio API' 'Use http://HOST:PORT or https://HOST:PORT without credentials/path'

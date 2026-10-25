@@ -6,7 +6,8 @@ user environment. Installation runs inside the guest, as its normal desktop user
 
 **Read the [compatibility decisions](docs/compatibility.md) before installing.**
 LM Studio inference runs on macOS and the VM uses its HTTP API; no LM Studio
-runtime is installed in Ubuntu. Proton Mail's inspected Linux package is
+runtime is installed in Ubuntu. Lightpanda is installed only with the optional
+Codex CLI because it is its local MCP browser. Proton Mail's inspected Linux package is
 amd64. Proton VPN setup is manual because its official support targets GNOME.
 Toolbox has an ARM64 build, but does not list Ubuntu 26.04 among tested releases.
 
@@ -103,7 +104,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `desktop` | Konsole, Foot and KeePassXC; ChatGPT, Obsidian, ONLYOFFICE, Bruno, Brave, ArtCraft Launcher, Solaar and Bitwarden are selected in the configurator. ArtCraft Launcher selects and updates PdfCraft, WordCraft and other Craft applications. Solaar maps diverted Back/Forward buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Cloudflare Security DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
-| `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
+| `ai` | Codex CLI, Claude Code CLI, RTK Codex hook, a selectable Qwen 27B Code / Qwen 4B Quotidien LM Studio catalog, Lightpanda local MCP browser, Local RAG document MCP and macOS LM Studio API guidance; **no guest LLM runtime or model download** | CLIs optional; Local RAG model downloads at its first use |
 | `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo`; the chosen developer keeps Docker access | Explicit opt-in only; required once selected; Docker group is root-equivalent |
 
 The `network` module keeps the `systemd-resolved` stub at `127.0.0.53` and
@@ -315,8 +316,11 @@ and [compatible API endpoints](https://lmstudio.ai/docs/developer/openai-compat)
 When **ChatGPT (official ARM64 preview)** is selected, the bootstrap creates
 `~/.codex/config.toml` only when it does not already exist. This config points
 the **Codex** view in the ChatGPT desktop app to the Mac LM Studio endpoint and
-keeps an OpenAI configuration alternative commented in the file. ChatGPT's
-Chat and Work views do not use local OpenAI-compatible endpoints.
+keeps an OpenAI configuration alternative commented in the file. It also
+installs `~/.codex/workstation-model-catalog.json`, which exposes Qwen3.8 27B
+Code and Qwen3 4B Quotidien in the Codex model selector. Load the selected
+model on the Mac before starting a Codex thread. ChatGPT's Chat and Work views
+do not use local OpenAI-compatible endpoints.
 
 Alternative only, **not configured**:
 

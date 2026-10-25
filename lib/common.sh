@@ -117,17 +117,32 @@ configure_optional_components() {
 }
 selected() { [[ -f ${WS_COMPONENTS:-} ]] && grep -qx "$1=1" "$WS_COMPONENTS"; }
 ensure_codex_lmstudio_config() {
-    local codex_home codex_config
+    local codex_home codex_config catalog_path mcp_config local_rag_base local_rag_data local_rag_cache state=retained
     codex_home="${CODEX_HOME:-$HOME/.codex}"
     codex_config="$codex_home/config.toml"
     [[ ! -L $codex_home && ! -L $codex_config ]] || { fail 'Refusing symlink Codex configuration path.'; return 1; }
     install -d -m 0700 "$codex_home"
     if [[ ! -e $codex_config ]]; then
         install -m 0600 "$WS_ROOT/config/codex-lmstudio.toml" "$codex_config"
-        printf 'created\n'
-    else
-        printf 'retained\n'
+        state=created
     fi
+    catalog_path="$codex_home/workstation-model-catalog.json"
+    [[ ! -L $catalog_path ]] || { fail 'Refusing symlink Codex model catalog path.'; return 1; }
+    install -m 0600 "$WS_ROOT/config/codex-model-catalog.json" "$catalog_path"
+    python3 "$WS_ROOT/tools/manage_codex_model_catalog.py" "$codex_config" "$catalog_path"
+    local_rag_base="$HOME/Documents/Local-RAG"
+    local_rag_data="$HOME/.local/share/workstation/local-rag"
+    local_rag_cache="$HOME/.cache/workstation/local-rag"
+    install -d -m 0700 "$local_rag_base" "$local_rag_data" "$local_rag_cache"
+    mcp_config="$WS_TMP/codex-mcp.toml"
+    sed -e "s|@LIGHTPANDA_BINARY@|$HOME/.local/bin/lightpanda|g" \
+        -e "s|@LOCAL_RAG_BASE_DIR@|$local_rag_base|g" \
+        -e "s|@LOCAL_RAG_DB_PATH@|$local_rag_data/index.sqlite|g" \
+        -e "s|@LOCAL_RAG_CACHE_DIR@|$local_rag_cache|g" \
+        "$WS_ROOT/config/codex-mcp.toml" > "$mcp_config"
+    managed_block "$codex_config" codex-mcp "$mcp_config"
+    python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' "$codex_config"
+    printf '%s\n' "$state"
 }
 # Each action runs in a fresh Bash process: optional-error handling cannot disable
 # errexit inside action functions (Bash's `if function` pitfall).

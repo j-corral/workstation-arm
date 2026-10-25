@@ -6,7 +6,7 @@
 # Parallels private network. The model ID was observed from this workstation's
 # /v1/models endpoint. Change it only after loading another model in LM Studio.
 model_provider = "mac_lmstudio"
-model = "qwen/qwen3-4b-2507"
+model = "qwen/qwen3.8-27b"
 model_context_window = 32768
 
 [model_providers.mac_lmstudio]
@@ -20,3 +20,7 @@ wire_api = "responses"
 # model_provider = "openai"
 # model = "gpt-6.1-sol"
 # openai_base_url = "https://api.openai.com/v1"
+
+# Workstation-managed MCP server definitions are appended below. They are kept
+# in a separate managed block so rerunning bootstrap preserves your own Codex
+# configuration.

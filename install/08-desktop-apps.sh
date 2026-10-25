@@ -162,9 +162,9 @@ chatgpt_configure_lmstudio() {
     local state
     state=$(ensure_codex_lmstudio_config)
     if [[ $state == created ]]; then
-        manual 'ChatGPT / LM Studio' 'Codex mode defaults to the Mac LM Studio endpoint. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
+        manual 'ChatGPT / LM Studio' 'Codex mode defaults to the Mac LM Studio endpoint, with selectable Qwen 27B Code / Qwen 4B Quotidien models plus Playwright, Local RAG, Lightpanda, GitLab and Plane MCP configured. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
     else
-        manual 'ChatGPT / LM Studio' "Existing ${CODEX_HOME:-$HOME/.codex}/config.toml retained; it was not replaced."
+        manual 'ChatGPT / LM Studio' "Existing ${CODEX_HOME:-$HOME/.codex}/config.toml retained; its workstation model catalog and managed Playwright, Local RAG, Lightpanda, GitLab and Plane MCP block were refreshed."
     fi
 }
 solaar_install() {

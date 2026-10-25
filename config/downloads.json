@@ -27,6 +27,20 @@
     "digest": "54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7",
     "evidence": "https://api.github.com/repos/oven-sh/bun/releases/tags/bun-v1.4.2"
   },
+  "lightpanda": {
+    "version": "1.0.2",
+    "url": "https://github.com/lightpanda-io/browser/releases/download/1.0.2/lightpanda-aarch64-linux",
+    "algorithm": "sha256",
+    "digest": "ac546dfc43c533430da92b75ab36f2a29da7d6324d5d38baf606ef2e0d849345",
+    "evidence": "https://github.com/lightpanda-io/browser/releases/tag/1.0.2"
+  },
+  "rtk": {
+    "version": "v1.0.1",
+    "url": "https://github.com/rtk-ai/rtk/releases/download/v1.0.1/rtk-aarch64-unknown-linux-gnu.tar.gz",
+    "algorithm": "sha256",
+    "digest": "cd627c4091ad90b5e5aca83ca5af66ee4b8aa8537a736533fa90544f461f1c2b",
+    "evidence": "https://github.com/rtk-ai/rtk/releases/tag/v1.0.1"
+  },
   "zed": {
     "version": "v1.20.2",
     "url": "https://github.com/zed-industries/zed/releases/download/v1.20.2/zed-linux-aarch64.tar.gz",
