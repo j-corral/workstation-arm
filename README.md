@@ -100,7 +100,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker; current developer added to the Docker group | Docker required; TUI optional; Docker group is root-equivalent |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Konsole, Foot and KeePassXC; Obsidian, ONLYOFFICE, Bruno, Solaar and Bitwarden are selected in the configurator. Selecting Solaar maps generic mouse side buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
+| `desktop` | Konsole, Foot and KeePassXC; ChatGPT, Obsidian, ONLYOFFICE, Bruno, Solaar and Bitwarden are selected in the configurator. Selecting Solaar maps generic mouse side buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |

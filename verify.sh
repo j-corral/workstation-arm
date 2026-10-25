@@ -108,6 +108,7 @@ section DESKTOP
 command_check optional Konsole konsole
 command_check optional 'Foot (Wayland alternative)' foot
 command_check optional KeePassXC keepassxc
+package_check 'ChatGPT desktop' chatgpt
 manual KWallet 'Disabled by bootstrap because Ubuntu 26.04 wallet creation is unreliable; use Bitwarden or KeePassXC.'
 if command -v flatpak >/dev/null && flatpak info --user md.obsidian.Obsidian >/dev/null 2>&1 && [[ $(flatpak info --user --show-ref md.obsidian.Obsidian) == app/md.obsidian.Obsidian/aarch64/stable ]]; then
     ok Obsidian 'aarch64 Flatpak installed; GUI/vault access not tested'

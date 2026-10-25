@@ -108,6 +108,28 @@ onlyoffice_install() {
     need_commands desktopeditors
     manual ONLYOFFICE 'Open a local DOCX, XLSX and PPTX in Plasma to validate the GUI and file associations.'
 }
+chatgpt_install() {
+    local package="$WS_TMP/chatgpt_arm64.deb"
+    if package_installed chatgpt; then
+        [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
+        need_commands chatgpt
+        manual ChatGPT 'Official ARM64 ChatGPT desktop app already installed; APT handles future updates.'
+        return
+    fi
+    # This is the official current ARM64 .deb URL documented by OpenAI. Its
+    # post-install setup adds the signed APT source used for later updates.
+    download https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb "$package"
+    [[ $(dpkg-deb -f "$package" Package) == chatgpt ]]
+    [[ $(dpkg-deb -f "$package" Architecture) == arm64 ]]
+    chmod 0711 "$WS_TMP"
+    chmod 0644 "$package"
+    apt_wait_for_locks
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 --no-remove --no-install-recommends install -y "$package"
+    package_installed chatgpt
+    [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
+    need_commands chatgpt
+    manual ChatGPT 'Official ARM64 ChatGPT desktop preview installed. Launch ChatGPT from Plasma or run chatgpt, then sign in interactively. The package configures signed APT updates.'
+}
 solaar_install() {
     apt_install solaar libkf6config-bin
     need_commands solaar kwriteconfig6 kreadconfig6
@@ -148,6 +170,7 @@ main() {
     component optional 'Konsole translucent terminal' konsole_install 'Default KDE terminal with a user-owned translucent profile.'
     component optional 'Foot terminal' foot_install 'Optional native ARM64 Wayland terminal with translucent color theme; Konsole remains default.'
     component optional KeePassXC keepassxc_install 'Native ARM64 Ubuntu package.'
+    if selected desktop_chatgpt; then component optional ChatGPT chatgpt_install 'Selected official ARM64 desktop preview; its package configures signed APT updates.'; else record SKIPPED ChatGPT 'Not selected in configurator.'; fi
     if selected desktop_obsidian; then component optional Obsidian obsidian_install 'Selected ARM64 Flatpak.'; else record SKIPPED Obsidian 'Not selected in configurator.'; fi
     if selected desktop_onlyoffice; then component optional ONLYOFFICE onlyoffice_install 'Selected local Office editor.'; else record SKIPPED ONLYOFFICE 'Not selected in configurator.'; fi
     if selected desktop_solaar; then component optional Solaar solaar_install 'Selected Logitech manager.'; else record SKIPPED Solaar 'Not selected in configurator.'; fi

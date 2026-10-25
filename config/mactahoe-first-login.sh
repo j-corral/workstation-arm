@@ -63,12 +63,14 @@ configure_selected_dock_launchers() {
     [[ -n $dock_containment && -n $dock_applet ]] || return 0
 
     local -a managed=(
+        'applications:chatgpt.desktop'
         'applications:onlyoffice-desktopeditors.desktop'
         'applications:md.obsidian.Obsidian.desktop'
         'applications:bruno.desktop'
         'applications:solaar.desktop'
         'applications:com.bitwarden.desktop'
     ) selected_launchers=() current_launchers=() retained=()
+    selected desktop_chatgpt && selected_launchers+=('applications:chatgpt.desktop')
     selected desktop_onlyoffice && selected_launchers+=('applications:onlyoffice-desktopeditors.desktop')
     selected desktop_obsidian && selected_launchers+=('applications:md.obsidian.Obsidian.desktop')
     selected desktop_bruno && selected_launchers+=('applications:bruno.desktop')

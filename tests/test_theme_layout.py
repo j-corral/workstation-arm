@@ -57,6 +57,7 @@ class ThemeLayoutTests(unittest.TestCase):
             config = home / '.config'
             (config / 'workstation').mkdir(parents=True)
             (config / 'workstation/components.conf').write_text(
+                'desktop_chatgpt=1\n'
                 'desktop_obsidian=1\n'
                 'desktop_bitwarden=1\n'
             )
@@ -94,6 +95,7 @@ class ThemeLayoutTests(unittest.TestCase):
             write = (home / 'write').read_text()
             self.assertIn('applications:org.kde.dolphin.desktop', write)
             self.assertNotIn('applications:bruno.desktop', write)
+            self.assertIn('applications:chatgpt.desktop', write)
             self.assertIn('applications:md.obsidian.Obsidian.desktop', write)
             self.assertIn('applications:com.bitwarden.desktop', write)
             self.assertIn('--key visibility 1', write)

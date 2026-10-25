@@ -205,11 +205,20 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn("'Git services'", common)
         self.assertIn('area_accounts=1', common)
         self.assertIn('saved_value', common)
+        self.assertIn('desktop_chatgpt', common)
         self.assertIn('desktop_onlyoffice', common)
         self.assertIn('ai_codex', common)
         self.assertIn('git_github', common)
         self.assertIn('selected desktop_bruno', (ROOT / 'install/07-dev-tools.sh').read_text())
         self.assertIn('selected git_gitlab', (ROOT / 'install/04-git-ssh.sh').read_text())
+
+    def test_chatgpt_uses_the_official_current_arm64_package(self):
+        desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
+        verify = (ROOT / 'verify.sh').read_text()
+        self.assertIn('https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb', desktop)
+        self.assertIn("dpkg-deb -f \"$package\" Package) == chatgpt", desktop)
+        self.assertIn("dpkg-deb -f \"$package\" Architecture) == arm64", desktop)
+        self.assertIn("package_check 'ChatGPT desktop' chatgpt", verify)
 
     def test_action_errexit_and_required_optional_boundaries(self):
         with tempfile.TemporaryDirectory() as d:
