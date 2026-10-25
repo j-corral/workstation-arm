@@ -19,7 +19,10 @@ checks = {
     'No ECS': dns.get('edns_client_subnet', {}).get('enabled') is False and dns.get('edns_client_subnet', {}).get('use_custom') is False,
     'DNSSEC validation enabled': dns.get('enable_dnssec') is True,
     'Private admin UI': config.get('http', {}).get('address') == '127.0.0.1:3000',
-    'No query log': config.get('querylog', {}).get('enabled') is False and config.get('querylog', {}).get('file_enabled') is False,
+    # Recent AdGuard Home releases omit file_enabled after they rewrite a
+    # configuration whose query logging is disabled.  An omitted optional
+    # setting therefore has the same effective value as false here.
+    'No query log': not config.get('querylog', {}).get('enabled', False) and not config.get('querylog', {}).get('file_enabled', False),
     'No statistics': config.get('statistics', {}).get('enabled') is False,
     'Filtering enabled': config.get('filtering', {}).get('filtering_enabled') is True,
     'No client upstream bypass': all(not client.get('upstreams') for client in config.get('clients', {}).get('persistent', [])),

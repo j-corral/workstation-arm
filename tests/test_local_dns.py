@@ -37,6 +37,11 @@ class LocalDnsTests(unittest.TestCase):
             altered['dns'][key] = value
             self.assertNotEqual(self.check(altered).returncode, 0, key)
 
+    def test_adguard_rewritten_disabled_query_log_is_accepted(self):
+        config = yaml.safe_load(TEMPLATE.read_text())
+        del config['querylog']['file_enabled']
+        self.assertEqual(self.check(config).returncode, 0)
+
     def test_docker_listener_requires_exact_gateway(self):
         config = yaml.safe_load(TEMPLATE.read_text())
         config['dns']['bind_hosts'].append('172.17.0.1')
