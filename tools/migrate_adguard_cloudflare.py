@@ -34,5 +34,9 @@ if managed:
     if querylog.get('enabled') is not False:
         querylog['enabled'] = False
         changed = True
+    statistics = config.setdefault('statistics', {})
+    if statistics.get('enabled') is not False:
+        statistics['enabled'] = False
+        changed = True
     if changed:
         path.write_text(yaml.safe_dump(config, sort_keys=False))

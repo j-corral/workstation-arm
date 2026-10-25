@@ -100,6 +100,17 @@ class LocalDnsTests(unittest.TestCase):
             result = yaml.safe_load(path.read_text())
         self.assertFalse(result['querylog']['enabled'])
 
+    def test_managed_configuration_statistics_are_disabled_during_reconciliation(self):
+        migrator = ROOT / 'tools/migrate_adguard_cloudflare.py'
+        config = yaml.safe_load(TEMPLATE.read_text())
+        config['statistics']['enabled'] = True
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'AdGuardHome.yaml'
+            path.write_text(yaml.safe_dump(config, sort_keys=False))
+            subprocess.run(['python3', str(migrator), str(path)], check=True)
+            result = yaml.safe_load(path.read_text())
+        self.assertFalse(result['statistics']['enabled'])
+
     def test_service_uses_adguard_foreground_service_mode(self):
         service = (ROOT / 'config/adguard-home.service').read_text()
         self.assertIn('AdGuardHome -s run', service)
