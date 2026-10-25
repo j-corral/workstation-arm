@@ -39,8 +39,13 @@ class LocalDnsTests(unittest.TestCase):
 
     def test_adguard_rewritten_disabled_query_log_is_accepted(self):
         config = yaml.safe_load(TEMPLATE.read_text())
-        del config['querylog']['file_enabled']
+        config['querylog']['file_enabled'] = True
         self.assertEqual(self.check(config).returncode, 0)
+
+    def test_enabled_query_log_is_rejected(self):
+        config = yaml.safe_load(TEMPLATE.read_text())
+        config['querylog']['enabled'] = True
+        self.assertNotEqual(self.check(config).returncode, 0)
 
     def test_docker_listener_requires_exact_gateway(self):
         config = yaml.safe_load(TEMPLATE.read_text())
