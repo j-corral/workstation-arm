@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Migrate only the previous managed Quad9 upstream to Cloudflare Security."""
+"""Reconcile the managed local resolver without discarding user rules."""
 from pathlib import Path
 import sys
 
@@ -13,9 +13,26 @@ dns = config.get('dns', {})
 # single-upstream Quad9 configuration with no fallback while retaining filters
 # and user rules.  Other upstreams still require an explicit administrator
 # decision and are rejected by the checker.
-old = dns.get('upstream_dns') == ['tls://dns.quad9.net'] and not dns.get('fallback_dns')
-if old:
-    dns['upstream_dns'] = ['tls://security.cloudflare-dns.com']
-    dns['bootstrap_dns'] = ['1.1.1.1', '1.0.0.1']
-    dns['enable_dnssec'] = True
-    path.write_text(yaml.safe_dump(config, sort_keys=False))
+managed = (
+    dns.get('upstream_dns') in (
+        ['tls://dns.quad9.net'],
+        ['tls://security.cloudflare-dns.com'],
+    )
+    and not dns.get('fallback_dns')
+)
+if managed:
+    changed = False
+    if dns.get('upstream_dns') == ['tls://dns.quad9.net']:
+        dns['upstream_dns'] = ['tls://security.cloudflare-dns.com']
+        dns['bootstrap_dns'] = ['1.1.1.1', '1.0.0.1']
+        dns['enable_dnssec'] = True
+        changed = True
+    # Query log enablement is security policy for this local resolver. AdGuard
+    # may rewrite its dormant file preference, but must never reactivate the
+    # actual query log on a later bootstrap run.
+    querylog = config.setdefault('querylog', {})
+    if querylog.get('enabled') is not False:
+        querylog['enabled'] = False
+        changed = True
+    if changed:
+        path.write_text(yaml.safe_dump(config, sort_keys=False))
