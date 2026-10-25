@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject drift that would silently bypass the local Quad9-only DNS chain."""
+"""Reject drift that would silently bypass the local protected DNS chain."""
 import ipaddress
 from pathlib import Path
 import sys
@@ -13,11 +13,11 @@ checks = {
     'Current configuration schema': config.get('schema_version') == 34,
     'DNS listeners': dns.get('bind_hosts') == expected,
     'DNS port': dns.get('port') == 53,
-    'Quad9 DoT only': dns.get('upstream_dns') == ['tls://dns.quad9.net'],
-    'Secure bootstrap only': dns.get('bootstrap_dns') == ['9.9.9.9', '149.112.112.112'],
+    'Cloudflare Security DoT only': dns.get('upstream_dns') == ['tls://security.cloudflare-dns.com'],
+    'Secure bootstrap only': dns.get('bootstrap_dns') == ['1.1.1.1', '1.0.0.1'],
     'No fallback': not dns.get('fallback_dns') and not dns.get('upstream_dns_file'),
     'No ECS': dns.get('edns_client_subnet', {}).get('enabled') is False and dns.get('edns_client_subnet', {}).get('use_custom') is False,
-    'No extra DNSSEC validation': dns.get('enable_dnssec') is False,
+    'DNSSEC validation enabled': dns.get('enable_dnssec') is True,
     'Private admin UI': config.get('http', {}).get('address') == '127.0.0.1:3000',
     'No query log': config.get('querylog', {}).get('enabled') is False and config.get('querylog', {}).get('file_enabled') is False,
     'No statistics': config.get('statistics', {}).get('enabled') is False,

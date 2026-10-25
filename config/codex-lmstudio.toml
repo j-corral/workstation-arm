@@ -1,0 +1,22 @@
+# This config is read by Codex CLI and the Codex view in the ChatGPT desktop
+# application. ChatGPT Chat and Work remain ChatGPT cloud features: they do
+# not use OpenAI-compatible local endpoints.
+
+# LM Studio runs on the macOS host; the Ubuntu guest reaches it over the
+# Parallels private network. The model ID was observed from this workstation's
+# /v1/models endpoint. Change it only after loading another model in LM Studio.
+model_provider = "mac_lmstudio"
+model = "qwen/qwen3-4b-2507"
+model_context_window = 32768
+
+[model_providers.mac_lmstudio]
+name = "Mac LM Studio"
+base_url = "http://192.168.1.25:1234/v1"
+wire_api = "responses"
+
+# To use OpenAI instead, comment the three active settings above and uncomment
+# these lines. Authenticate in ChatGPT or Codex interactively; do not put API
+# keys in this file.
+# model_provider = "openai"
+# model = "gpt-6.1-sol"
+# openai_base_url = "https://api.openai.com/v1"

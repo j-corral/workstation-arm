@@ -10,12 +10,12 @@ dns:
   - 127.0.0.1
   port: 53
   upstream_dns:
-  - tls://dns.quad9.net
+  - tls://security.cloudflare-dns.com
   bootstrap_dns:
-  - 9.9.9.9
-  - 149.112.112.112
+  - 1.1.1.1
+  - 1.0.0.1
   fallback_dns: []
-  enable_dnssec: false # Quad9 Secure validates; no extra DNSSEC request flag needed here.
+  enable_dnssec: true
   edns_client_subnet:
     custom_ip: ''
     enabled: false

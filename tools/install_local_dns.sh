@@ -134,6 +134,10 @@ if [[ ! -e /etc/workstation-adguard/AdGuardHome.yaml ]]; then
     chmod 0640 /etc/workstation-adguard/AdGuardHome.yaml
     chown workstation-adguard:workstation-adguard /etc/workstation-adguard/AdGuardHome.yaml
 else
+    # Upgrade only the prior strictly-managed Quad9 chain. User filters and
+    # allow rules remain in the same YAML document. Any other upstream is
+    # rejected by the checker below instead of being silently replaced.
+    python3 "$root/tools/migrate_adguard_cloudflare.py" /etc/workstation-adguard/AdGuardHome.yaml
     # Preserve existing rules, but never silently retain insecure upstreams/fallbacks.
     python3 "$root/tools/check_adguard_config.py" /etc/workstation-adguard/AdGuardHome.yaml "$gateway"
 fi

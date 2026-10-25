@@ -3,15 +3,15 @@ set -uo pipefail
 # Read-only by default. Explicit network tests are opt-in and never logged to disk.
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
-hello=0 link=0 quad9=0 dns_status=0 lm_host='' failures=0
+hello=0 link=0 dns_security=0 dns_status=0 lm_host='' failures=0
 while (( $# )); do
     case $1 in
         --docker-hello) hello=1 ;;
-        --quad9) quad9=1 ;;
+        --dns-security) dns_security=1 ;;
         --dns-status) dns_status=1 ;;
         --lm-link) link=1 ;;
         --lm-host) [[ $# -ge 2 ]] || { printf 'Missing URL after --lm-host\n' >&2; exit 2; }; lm_host=$2; shift ;;
-        --help|-h) printf 'Usage: ./verify.sh [--dns-status] [--docker-hello] [--quad9] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
+        --help|-h) printf 'Usage: ./verify.sh [--dns-status] [--dns-security] [--docker-hello] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
         *) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift
@@ -114,6 +114,8 @@ if command -v flatpak >/dev/null && flatpak info --user md.obsidian.Obsidian >/d
     ok Obsidian 'aarch64 Flatpak installed; GUI/vault access not tested'
 else warn Obsidian 'aarch64 Flatpak not installed for this user'; fi
 package_check ONLYOFFICE onlyoffice-desktopeditors
+package_check Brave brave-browser
+package_check 'ArtCraft Launcher' artcraft-launcher
 package_check Solaar solaar
 if command -v flatpak >/dev/null && flatpak info --user com.bitwarden.desktop >/dev/null 2>&1; then
     bitwarden_ref=$(flatpak info --user --show-ref com.bitwarden.desktop)
@@ -126,20 +128,20 @@ section NETWORK
 if (( dns_status )); then bash "$(dirname -- "$0")/tools/dns_status.sh"; fi
 if [[ -f /etc/systemd/resolved.conf.d/70-workstation-adguard.conf ]]; then
     if cmp -s /etc/systemd/resolved.conf.d/70-workstation-adguard.conf "$(dirname -- "$0")/config/adguard-resolved.conf"; then
-        ok 'AdGuard Home + Quad9' 'managed local resolver configuration present; use --dns-status for live diagnostic'
-    else bad 'AdGuard Home + Quad9' 'managed resolver configuration differs'; fi
+        ok 'AdGuard Home + Cloudflare Security' 'managed local resolver configuration present; use --dns-status for live diagnostic'
+    else bad 'AdGuard Home + Cloudflare Security' 'managed resolver configuration differs'; fi
 else
 if [[ -f /etc/systemd/resolved.conf.d/60-workstation-quad9.conf ]]; then
     if cmp -s /etc/systemd/resolved.conf.d/60-workstation-quad9.conf "$(dirname -- "$0")/config/quad9-resolved.conf"; then
-        ok 'Quad9 Secure DoT' 'managed systemd-resolved configuration present; use --quad9 for a live check'
-    else bad 'Quad9 Secure DoT' 'managed resolver configuration differs from repository'; fi
-else warn 'Quad9 Secure DoT' 'not configured'; fi
+        warn 'Legacy Quad9 direct DoT' 'rerun ./bootstrap.sh --only network to migrate to Cloudflare Security DoT'
+    else bad 'Legacy Quad9 direct DoT' 'managed resolver configuration differs from repository'; fi
+else warn 'Legacy Quad9 Secure DoT' 'not configured'; fi
 fi
 if [[ -f $HOME/.local/share/applications/workstation-adguard-home.desktop ]]; then ok 'AdGuard Home launcher' 'opens loopback-only dashboard'; else warn 'AdGuard Home launcher' 'absent'; fi
-if (( quad9 )); then
-    if command -v resolvectl >/dev/null && timeout 15 resolvectl query -t TXT proto.on.quad9.net 2>/dev/null | grep -Eq '(^|[^a-z])dot\.'; then
-        ok 'Quad9 live protocol' 'Quad9 reports DNS-over-TLS'
-    else bad 'Quad9 live protocol' 'Quad9 did not report DNS-over-TLS'; fi
+if (( dns_security )); then
+    if command -v openssl >/dev/null && timeout 20 openssl s_client -connect security.cloudflare-dns.com:853 -servername security.cloudflare-dns.com </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)' && timeout 15 dig +time=3 +tries=1 +short A malware.testcategory.com | grep -Fxq '0.0.0.0'; then
+        ok 'Cloudflare Security DoT' 'TLS endpoint verified and the malware test domain is blocked'
+    else bad 'Cloudflare Security DoT' 'DoT TLS verification or malware filtering failed'; fi
 fi
 command_check optional Tailscale tailscale
 package_check 'Proton VPN (KDE setup manual)' proton-vpn-gnome-desktop

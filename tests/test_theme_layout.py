@@ -41,6 +41,7 @@ class ThemeLayoutTests(unittest.TestCase):
                 result = subprocess.run(['bash', str(SCRIPT)], env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(calls.read_text().count('--resetLayout'), 1)
+            self.assertGreaterEqual(calls.read_text().count('--apply com.github.vinceliuice.MacTahoe-Light'), 2)
             backup = home / '.local/state/workstation/theme-backup/plasma-org.kde.plasma.desktop-appletsrc.before-mactahoe'
             self.assertEqual(backup.read_text(), 'old panels')
 
@@ -98,6 +99,8 @@ class ThemeLayoutTests(unittest.TestCase):
             self.assertIn('applications:chatgpt.desktop', write)
             self.assertIn('applications:md.obsidian.Obsidian.desktop', write)
             self.assertIn('applications:com.bitwarden.desktop', write)
+            self.assertNotIn('applications:brave-browser.desktop', write)
+            self.assertNotIn('applications:artcraft-launcher.desktop', write)
             self.assertIn('--key visibility 1', write)
             self.assertIn('--key icon view-grid', write)
 

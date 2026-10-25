@@ -19,6 +19,15 @@ if [[ ! -e $marker ]]; then
     : > "$marker"
 fi
 
+# A Plasma session change can leave the active desktop theme as Breeze even
+# though the MacTahoe assets and panel layout are still installed.  Reapply
+# only the look-and-feel settings: --resetLayout is deliberately used above
+# once only, so a login never discards the user's panels, dock or widgets.
+plasma-apply-lookandfeel --apply com.github.vinceliuice.MacTahoe-Light
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light
+fi
+
 selected() {
     local name=$1 choices="$config_dir/workstation/components.conf"
     [[ -r $choices ]] && grep -Fxq "$name=1" "$choices"
@@ -69,6 +78,8 @@ configure_selected_dock_launchers() {
         'applications:bruno.desktop'
         'applications:solaar.desktop'
         'applications:com.bitwarden.desktop'
+        'applications:brave-browser.desktop'
+        'applications:artcraft-launcher.desktop'
     ) selected_launchers=() current_launchers=() retained=()
     selected desktop_chatgpt && selected_launchers+=('applications:chatgpt.desktop')
     selected desktop_onlyoffice && selected_launchers+=('applications:onlyoffice-desktopeditors.desktop')
@@ -76,6 +87,8 @@ configure_selected_dock_launchers() {
     selected desktop_bruno && selected_launchers+=('applications:bruno.desktop')
     selected desktop_solaar && selected_launchers+=('applications:solaar.desktop')
     selected desktop_bitwarden && selected_launchers+=('applications:com.bitwarden.desktop')
+    selected desktop_brave && selected_launchers+=('applications:brave-browser.desktop')
+    selected desktop_artcraft && selected_launchers+=('applications:artcraft-launcher.desktop')
 
     local current launcher known
     current=$(kreadconfig6 --file "$applets" --group Containments --group "$dock_containment" --group Applets --group "$dock_applet" --group Configuration --group General --key launchers 2>/dev/null || true)

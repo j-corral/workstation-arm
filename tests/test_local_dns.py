@@ -47,6 +47,25 @@ class LocalDnsTests(unittest.TestCase):
         script = (ROOT / 'tools/dns_status.sh').read_text()
         self.assertIn('ready<15', script)
         self.assertLess(script.index('ready<15'), script.index('systemctl is-active --quiet AdGuardHome.service'))
+        self.assertIn('security.cloudflare-dns.com:853', script)
+        self.assertIn('malware.testcategory.com', script)
+
+    def test_existing_managed_quad9_chain_is_migrated_without_losing_rules(self):
+        migrator = ROOT / 'tools/migrate_adguard_cloudflare.py'
+        config = yaml.safe_load(TEMPLATE.read_text())
+        config['dns']['upstream_dns'] = ['tls://dns.quad9.net']
+        config['dns']['bootstrap_dns'] = ['9.9.9.9', '149.112.112.112']
+        config['dns']['enable_dnssec'] = False
+        config['user_rules'] = ['@@||client.example^']
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'AdGuardHome.yaml'
+            path.write_text(yaml.safe_dump(config, sort_keys=False))
+            subprocess.run(['python3', str(migrator), str(path)], check=True)
+            result = yaml.safe_load(path.read_text())
+        self.assertEqual(result['dns']['upstream_dns'], ['tls://security.cloudflare-dns.com'])
+        self.assertEqual(result['dns']['bootstrap_dns'], ['1.1.1.1', '1.0.0.1'])
+        self.assertTrue(result['dns']['enable_dnssec'])
+        self.assertEqual(result['user_rules'], ['@@||client.example^'])
 
     def test_service_uses_adguard_foreground_service_mode(self):
         service = (ROOT / 'config/adguard-home.service').read_text()

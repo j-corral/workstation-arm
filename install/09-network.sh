@@ -7,9 +7,9 @@ tailscale_install() {
     tailscale version
     manual Tailscale 'Only if authorized by client IT: sudo tailscale up --accept-routes=false --accept-dns=false. No authentication or routes configured by bootstrap.'
 }
-quad9_dot_install() {
+protected_dns_install() {
     # Ubuntu 26.04 exposes dnsutils as a virtual package; bind9-dnsutils owns dig.
-    apt_install bind9-dnsutils python3-yaml
+    apt_install bind9-dnsutils python3-yaml openssl
     need_commands resolvectl dig ss ip
     locked_download adguard_home "$WS_TMP/adguard.tar.gz"
     extract_archive "$WS_TMP/adguard.tar.gz" "$WS_TMP/adguard"
@@ -34,5 +34,5 @@ EOF
 main() {
     component optional Tailscale tailscale_install 'Official signed resolute ARM64 repository; daemon starts but does not join a tailnet.'
     manual 'Proton VPN' 'ARM64 packages exist, but official support requires GNOME; this Plasma workstation needs manual IT-reviewed setup. No login or routing changes.'
-    component optional 'Local AdGuard Home + Quad9 Secure DoT' quad9_dot_install 'Local ad/tracker filter, Quad9 threat protection and split-DNS-capable systemd-resolved.'
+    component optional 'Local AdGuard Home + Cloudflare Security DoT' protected_dns_install 'Local ad/tracker filter, Cloudflare malware/phishing protection and split-DNS-capable systemd-resolved.'
 }

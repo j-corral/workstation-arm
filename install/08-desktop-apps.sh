@@ -108,11 +108,39 @@ onlyoffice_install() {
     need_commands desktopeditors
     manual ONLYOFFICE 'Open a local DOCX, XLSX and PPTX in Plasma to validate the GUI and file associations.'
 }
+brave_install() {
+    repository brave https://brave-browser-apt-release.s3.brave.com stable main https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg gpg D16166072CACDF2C9429CBF11BF41E37D039F691
+    apt_install brave-browser
+    need_commands brave-browser
+    manual Brave "Official ARM64 Brave package installed from Brave's signed repository; start it from Plasma and import settings only if wanted."
+}
+artcraft_install() {
+    local package="$WS_TMP/artcraft-launcher_arm64.deb"
+    if package_installed artcraft-launcher; then
+        [[ $(dpkg-query -W -f='${Architecture}' artcraft-launcher) == arm64 ]]
+        need_commands artcraft-launcher
+        manual 'ArtCraft Launcher' 'Already installed. Open it to select PdfCraft, WordCraft, DeckCraft, GridCraft or another Craft app; it verifies and updates the selected ARM64 applications itself.'
+        return
+    fi
+    locked_download artcraft_launcher "$package"
+    [[ $(dpkg-deb -f "$package" Package) == artcraft-launcher ]]
+    [[ $(dpkg-deb -f "$package" Architecture) == arm64 ]]
+    chmod 0711 "$WS_TMP"
+    chmod 0644 "$package"
+    apt_wait_for_locks
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 --no-remove --no-install-recommends install -y "$package"
+    package_installed artcraft-launcher
+    [[ $(dpkg-query -W -f='${Architecture}' artcraft-launcher) == arm64 ]]
+    need_commands artcraft-launcher
+    manual 'ArtCraft Launcher' 'Installed. Open it to select PdfCraft, WordCraft, DeckCraft, GridCraft or another Craft app; it verifies and updates the selected ARM64 applications itself.'
+}
 chatgpt_install() {
-    local package="$WS_TMP/chatgpt_arm64.deb"
+    local package="$WS_TMP/chatgpt_arm64.deb" codex_home="${CODEX_HOME:-$HOME/.codex}" codex_config
+    codex_config="$codex_home/config.toml"
     if package_installed chatgpt; then
         [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
         need_commands chatgpt
+        chatgpt_configure_lmstudio "$codex_home" "$codex_config"
         manual ChatGPT 'Official ARM64 ChatGPT desktop app already installed; APT handles future updates.'
         return
     fi
@@ -128,7 +156,19 @@ chatgpt_install() {
     package_installed chatgpt
     [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
     need_commands chatgpt
+    chatgpt_configure_lmstudio "$codex_home" "$codex_config"
     manual ChatGPT 'Official ARM64 ChatGPT desktop preview installed. Launch ChatGPT from Plasma or run chatgpt, then sign in interactively. The package configures signed APT updates.'
+}
+chatgpt_configure_lmstudio() {
+    local codex_home=$1 codex_config=$2
+    [[ ! -L $codex_home && ! -L $codex_config ]] || { fail 'Refusing symlink Codex configuration path.'; return 1; }
+    install -d -m 0700 "$codex_home"
+    if [[ ! -e $codex_config ]]; then
+        install -m 0600 "$WS_ROOT/config/codex-lmstudio.toml" "$codex_config"
+        manual 'ChatGPT / LM Studio' 'Codex mode defaults to the Mac LM Studio endpoint. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
+    else
+        manual 'ChatGPT / LM Studio' "Existing $codex_config retained; copy config/codex-lmstudio.toml manually if you want the Mac LM Studio Codex profile."
+    fi
 }
 solaar_install() {
     apt_install solaar libkf6config-bin
@@ -142,7 +182,42 @@ solaar_install() {
     kwriteconfig6 --file kglobalshortcutsrc --group kwin --key 'Switch One Desktop to the Left' 'Meta+Ctrl+Left,Meta+Ctrl+Left,Switch One Desktop to the Left'
     [[ $(kreadconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton1) == 'Key,Meta+Ctrl+Right' ]]
     [[ $(kreadconfig6 --file kcminputrc --group ButtonRebinds --group Mouse --key ExtraButton2) == 'Key,Meta+Ctrl+Left' ]]
-    manual Solaar 'Attach the Logitech receiver to the guest (or pair via Bluetooth), then run solaar show. MX Anywhere side buttons are mapped to next/previous Plasma virtual desktop; log out/in after this configuration. If they do not react, run xev -event button in Plasma X11 while pressing each button: Parallels must forward the button events to the guest.'
+    local solaar_dir="$HOME/.config/solaar"
+    local rules="$solaar_dir/rules.yaml"
+    [[ ! -L $solaar_dir && ! -L $rules ]] || { fail 'Refusing symlink Solaar configuration path.'; return 1; }
+    install -d -m 0700 "$solaar_dir"
+    if [[ ! -e $rules ]]; then
+        install -m 0600 "$WS_ROOT/config/solaar-rules.yaml" "$rules"
+    elif ! grep -Fqx '# workstation-mx-anywhere-desktops' "$rules"; then
+        # Solaar keeps all rules in one YAML list. Append only this named,
+        # idempotent block so existing user rules remain untouched.
+        tail -n +3 "$WS_ROOT/config/solaar-rules.yaml" >> "$rules"
+        chmod 0600 "$rules"
+    fi
+    # Solaar emits the shortcut through uinput. uaccess grants the active
+    # desktop user access without adding it to a privileged static group.
+    [[ ! -L /etc/udev/rules.d/70-workstation-solaar-uinput.rules ]] || { fail 'Refusing symlink Solaar uinput rule.'; return 1; }
+    sudo install -d -m 0755 /etc/udev/rules.d
+    sudo install -m 0644 "$WS_ROOT/config/70-workstation-solaar-uinput.rules" /etc/udev/rules.d/70-workstation-solaar-uinput.rules
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger --subsystem-match=misc --sysname-match=uinput
+    local autostart="$HOME/.config/autostart/solaar.desktop"
+    [[ ! -L $autostart ]] || { fail 'Refusing symlink Solaar autostart path.'; return 1; }
+    install -d -m 0700 "$HOME/.config/autostart"
+    if [[ ! -e $autostart ]]; then
+        cat > "$WS_TMP/solaar.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Solaar
+Comment=Logitech device manager and workstation button rules
+Exec=solaar --window=hide
+Icon=solaar
+Terminal=false
+X-KDE-autostart-after=panel
+EOF
+        install -m 0644 "$WS_TMP/solaar.desktop" "$autostart"
+    fi
+    manual Solaar 'The Back/Forward rules emit Ctrl+Meta+Left/Right for Plasma virtual desktops. In Solaar, enable Key/Button Diversion for Back Button and Forward Button, then log out/in. Solaar starts hidden at each login. This works through Bluetooth only when the mouse exposes those divertable HID++ controls.'
 }
 bitwarden_install() {
     apt_install flatpak
@@ -173,6 +248,8 @@ main() {
     if selected desktop_chatgpt; then component optional ChatGPT chatgpt_install 'Selected official ARM64 desktop preview; its package configures signed APT updates.'; else record SKIPPED ChatGPT 'Not selected in configurator.'; fi
     if selected desktop_obsidian; then component optional Obsidian obsidian_install 'Selected ARM64 Flatpak.'; else record SKIPPED Obsidian 'Not selected in configurator.'; fi
     if selected desktop_onlyoffice; then component optional ONLYOFFICE onlyoffice_install 'Selected local Office editor.'; else record SKIPPED ONLYOFFICE 'Not selected in configurator.'; fi
+    if selected desktop_brave; then component optional Brave brave_install "Selected open-source ARM64 browser from Brave's signed APT repository."; else record SKIPPED Brave 'Not selected in configurator.'; fi
+    if selected desktop_artcraft; then component optional 'ArtCraft Launcher' artcraft_install 'Selected ARM64 launcher for PdfCraft, WordCraft and the Craft suite.'; else record SKIPPED 'ArtCraft Launcher' 'Not selected in configurator.'; fi
     if selected desktop_solaar; then component optional Solaar solaar_install 'Selected Logitech manager.'; else record SKIPPED Solaar 'Not selected in configurator.'; fi
     if selected desktop_bitwarden; then component optional Bitwarden bitwarden_install 'Selected aarch64 Flatpak.'; else record SKIPPED Bitwarden 'Not selected in configurator.'; fi
     manual 'Proton Mail' 'Unsupported for automatic ARM64 installation: official Linux .deb inspected is amd64 (1.14.0). Use the web app manually.'

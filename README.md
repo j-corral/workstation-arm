@@ -100,8 +100,8 @@ set. This also happens with `--only`. Module order is fixed:
 | `runtimes` | System Python/venv, pinned uv/uvx, mise, Bun, Ubuntu .NET 10 SDK | Required |
 | `docker` | Official Docker Engine/CLI/containerd/Compose/Buildx; pinned lazydocker; current developer added to the Docker group | Docker required; TUI optional; Docker group is root-equivalent |
 | `dev` | VS Code, Zed, Toolbox, Bruno ARM64 | Optional |
-| `desktop` | Konsole, Foot and KeePassXC; ChatGPT, Obsidian, ONLYOFFICE, Bruno, Solaar and Bitwarden are selected in the configurator. Selecting Solaar maps generic mouse side buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
-| `network` | Tailscale; local AdGuard Home ARM64 and Quad9 Secure DoT | Optional; Proton VPN manual |
+| `desktop` | Konsole, Foot and KeePassXC; ChatGPT, Obsidian, ONLYOFFICE, Bruno, Brave, ArtCraft Launcher, Solaar and Bitwarden are selected in the configurator. ArtCraft Launcher selects and updates PdfCraft, WordCraft and other Craft applications. Solaar maps diverted Back/Forward buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
+| `network` | Tailscale; local AdGuard Home ARM64 and Cloudflare Security DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
 | `ai` | Codex CLI, Claude Code CLI, macOS LM Studio API guidance; **no guest inference runtime or model download** | CLIs optional; manual host setup |
 | `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo`; the chosen developer keeps Docker access | Explicit opt-in only; required once selected; Docker group is root-equivalent |
@@ -110,7 +110,7 @@ The `network` module keeps the `systemd-resolved` stub at `127.0.0.53` and
 `/etc/resolv.conf` symlink unchanged. Its root route `~.` forwards ordinary DNS
 to AdGuard Home at `127.0.0.1:53`; more-specific per-link VPN routing domains
 can still take priority. AdGuard filters ads/trackers and forwards exclusively
-to Quad9 Secure over DoT. Quad9 validates DNSSEC and handles threat blocking.
+to Cloudflare Security over DoT. AdGuard validates DNSSEC and Cloudflare handles threat blocking.
 The admin UI is loopback-only at `http://127.0.0.1:3000`. Query logs and
 statistics are disabled. If Docker is active, AdGuard also listens on the
 `docker0` gateway and the daemon receives that single local DNS address; the
@@ -121,7 +121,7 @@ Add local exceptions in AdGuard's web UI (Filters → Custom filtering rules,
 for example `@@||needed.example^`) or add further filter URLs to `filters` in
 `/etc/workstation-adguard/AdGuardHome.yaml` while the service is stopped.
 The installer preserves these rules on reruns. Only the AdGuard DNS filter is
-enabled initially; Quad9 supplies the threat list. TCP 853 to Quad9 must be
+enabled initially; Cloudflare supplies the threat list. TCP 853 to Cloudflare must be
 reachable; the installer adds no new firewall and does not globally block port
 53, which could disrupt a future VPN.
 
@@ -311,6 +311,12 @@ test prompt and confirm on the Mac that LM Studio handled it. Repeat with the
 client VPN enabled. A reachable `/v1/models` endpoint is not inference proof.
 See [LM Studio's network server documentation](https://lmstudio.ai/docs/developer/core/server/serve-on-network)
 and [compatible API endpoints](https://lmstudio.ai/docs/developer/openai-compat).
+
+When **ChatGPT (official ARM64 preview)** is selected, the bootstrap creates
+`~/.codex/config.toml` only when it does not already exist. This config points
+the **Codex** view in the ChatGPT desktop app to the Mac LM Studio endpoint and
+keeps an OpenAI configuration alternative commented in the file. ChatGPT's
+Chat and Work views do not use local OpenAI-compatible endpoints.
 
 Alternative only, **not configured**:
 

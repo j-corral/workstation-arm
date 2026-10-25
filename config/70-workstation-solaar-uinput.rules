@@ -1,0 +1,3 @@
+# Allow the active local desktop seat to use Solaar's synthetic input device.
+# No group membership is granted; logind removes the ACL when the session ends.
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess"

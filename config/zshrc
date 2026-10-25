@@ -7,6 +7,7 @@ path=("$HOME/.local/bin" "$HOME/.bun/bin" "$HOME/.lmstudio/bin" $path)
 # vcs_info is bundled with Zsh, so Git branch and dirty-state information do
 # not require Oh My Zsh or a third-party plugin framework.
 autoload -Uz vcs_info
+setopt prompt_subst
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:git:*' check-for-changes true
 zstyle ':vcs_info:git:*' stagedstr '%F{green}+%f'

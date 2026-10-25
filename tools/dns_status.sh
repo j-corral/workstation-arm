@@ -21,7 +21,7 @@ v = yaml.safe_load(open('/etc/workstation-adguard/AdGuardHome.yaml'))
 print(v.get('dns', {}).get('upstream_dns', '(missing)'))
 PY
 else printf '(not readable)\n'; fi
-printf 'Quad9 protocol: '; timeout 20 dig +time=4 +tries=1 +short TXT proto.on.quad9.net | tr -d '"' || true
+printf 'Cloudflare Security DoT: '; timeout 20 openssl s_client -connect security.cloudflare-dns.com:853 -servername security.cloudflare-dns.com </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)' && printf 'TLS verified\n' || printf 'not verified\n'
 [[ $mode == --test ]] || exit 0
 # systemd can report a newly enabled Type=simple service as "activating" for a
 # short moment even after systemctl enable --now returns.  Wait before treating
@@ -42,7 +42,8 @@ for attempt in 1 2 3 4 5; do
     sleep 2
 done
 timeout 15 dig +time=3 +tries=1 +short A example.com | grep -Eq '^[0-9]+\.'
-timeout 15 dig +time=3 +tries=1 +short TXT proto.on.quad9.net | tr -d '"' | grep -Eq '^dot\.?$'
+timeout 20 openssl s_client -connect security.cloudflare-dns.com:853 -servername security.cloudflare-dns.com </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+timeout 15 dig +time=3 +tries=1 +short A malware.testcategory.com | grep -Fxq '0.0.0.0'
 timeout 15 dig +time=3 +tries=1 brokendnssec.net A | grep -q 'status: SERVFAIL'
 blocked=$(timeout 15 dig +time=3 +tries=1 isitblocked.org A)
 grep -q 'status: NXDOMAIN' <<< "$blocked"

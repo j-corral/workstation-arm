@@ -89,7 +89,7 @@ configure_optional_components() {
             areas=$scope
         fi
         if grep -Fqx desktop <<< "$areas"; then
-            choices+=$(whiptail --title 'Desktop applications' --separate-output --checklist 'Choose desktop applications' 20 78 10 desktop_chatgpt 'ChatGPT (official ARM64 preview)' "$(component_default desktop_chatgpt)" desktop_onlyoffice 'ONLYOFFICE' "$(component_default desktop_onlyoffice)" desktop_obsidian 'Obsidian' "$(component_default desktop_obsidian)" desktop_bruno 'Bruno' "$(component_default desktop_bruno)" desktop_solaar 'Solaar (Logitech)' "$(component_default desktop_solaar)" desktop_bitwarden 'Bitwarden' "$(component_default desktop_bitwarden)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
+            choices+=$(whiptail --title 'Desktop applications' --separate-output --checklist 'Choose desktop applications' 22 78 12 desktop_chatgpt 'ChatGPT (official ARM64 preview)' "$(component_default desktop_chatgpt)" desktop_onlyoffice 'ONLYOFFICE' "$(component_default desktop_onlyoffice)" desktop_obsidian 'Obsidian' "$(component_default desktop_obsidian)" desktop_bruno 'Bruno' "$(component_default desktop_bruno)" desktop_brave 'Brave Browser' "$(component_default desktop_brave)" desktop_artcraft 'ArtCraft Launcher (PdfCraft, WordCraft...)' "$(component_default desktop_artcraft)" desktop_solaar 'Solaar (Logitech)' "$(component_default desktop_solaar)" desktop_bitwarden 'Bitwarden' "$(component_default desktop_bitwarden)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
         fi
         if grep -Fqx ai <<< "$areas"; then
             choices+=$'\n'$(whiptail --title 'AI tools' --separate-output --checklist 'Choose AI command-line tools' 16 78 6 ai_codex 'Codex CLI' "$(component_default ai_codex)" ai_claude 'Claude Code' "$(component_default ai_claude)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
@@ -99,7 +99,7 @@ configure_optional_components() {
         fi
     else
         areas=$'desktop\nai\ngit'
-        choices=$'desktop_chatgpt\ndesktop_onlyoffice\ndesktop_obsidian\ndesktop_bruno\ndesktop_solaar\ndesktop_bitwarden\nai_codex\nai_claude\ngit_github\ngit_gitlab'
+        choices=$'desktop_chatgpt\ndesktop_onlyoffice\ndesktop_obsidian\ndesktop_bruno\ndesktop_brave\ndesktop_artcraft\ndesktop_solaar\ndesktop_bitwarden\nai_codex\nai_claude\ngit_github\ngit_gitlab'
     fi
     {
         printf 'area_accounts=1\n'
@@ -107,7 +107,7 @@ configure_optional_components() {
             if [[ $scope != all && $tag != "$scope" && -f $config ]]; then saved_value "area_$tag"
             elif grep -Fqx "$tag" <<< "$areas"; then printf 'area_%s=1\n' "$tag"; else printf 'area_%s=0\n' "$tag"; fi
         done
-        for tag in desktop_chatgpt desktop_onlyoffice desktop_obsidian desktop_bruno desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
+        for tag in desktop_chatgpt desktop_onlyoffice desktop_obsidian desktop_bruno desktop_brave desktop_artcraft desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
             if [[ $scope != all && $tag != "${scope}_"* && -f $config ]]; then saved_value "$tag"
             elif tr -d '"' <<< "$choices" | grep -Fqx "$tag"; then printf '%s=1\n' "$tag"; else printf '%s=0\n' "$tag"; fi
         done

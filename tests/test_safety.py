@@ -85,6 +85,7 @@ printf 'CONTINUED'
         zshrc = (ROOT / 'config/zshrc').read_text()
         self.assertIn('zsh-syntax-highlighting', shell)
         self.assertIn('autoload -Uz vcs_info', zshrc)
+        self.assertIn('setopt prompt_subst', zshrc)
         self.assertIn("PROMPT='%F{cyan}%~%f${vcs_info_msg_0_} %# '", zshrc)
         self.assertIn("alias ls='ls --color=auto'", zshrc)
         self.assertIn('/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh', zshrc)
@@ -97,6 +98,11 @@ printf 'CONTINUED'
         self.assertIn("'Key,Meta+Ctrl+Left'", desktop)
         self.assertIn("'Switch One Desktop to the Right'", desktop)
         self.assertIn("'Switch One Desktop to the Left'", desktop)
+        self.assertIn('solaar-rules.yaml', desktop)
+        self.assertIn('70-workstation-solaar-uinput.rules', desktop)
+        self.assertIn('Key/Button Diversion', desktop)
+        self.assertIn("grep -Fqx '# workstation-mx-anywhere-desktops'", desktop)
+        self.assertIn('Exec=solaar --window=hide', desktop)
 
     def test_broken_awk_stops_with_actionable_diagnostic(self):
         env = dict(os.environ, WS_ROOT=str(ROOT), WS_REPORT='')
@@ -207,6 +213,8 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn('saved_value', common)
         self.assertIn('desktop_chatgpt', common)
         self.assertIn('desktop_onlyoffice', common)
+        self.assertIn('desktop_brave', common)
+        self.assertIn('desktop_artcraft', common)
         self.assertIn('ai_codex', common)
         self.assertIn('git_github', common)
         self.assertIn('selected desktop_bruno', (ROOT / 'install/07-dev-tools.sh').read_text())
@@ -215,10 +223,29 @@ printf 'SHOULD_NOT_CONTINUE'
     def test_chatgpt_uses_the_official_current_arm64_package(self):
         desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
         verify = (ROOT / 'verify.sh').read_text()
+        lmstudio = (ROOT / 'config/codex-lmstudio.toml').read_text()
         self.assertIn('https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb', desktop)
         self.assertIn("dpkg-deb -f \"$package\" Package) == chatgpt", desktop)
         self.assertIn("dpkg-deb -f \"$package\" Architecture) == arm64", desktop)
+        self.assertIn('chatgpt_configure_lmstudio', desktop)
+        self.assertIn('Refusing symlink Codex configuration path.', desktop)
+        self.assertIn('model_provider = "mac_lmstudio"', lmstudio)
+        self.assertIn('base_url = "http://192.168.1.25:1234/v1"', lmstudio)
+        self.assertIn('# model_provider = "openai"', lmstudio)
         self.assertIn("package_check 'ChatGPT desktop' chatgpt", verify)
+
+    def test_brave_and_artcraft_have_arm64_install_paths(self):
+        desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
+        downloads = json.loads((ROOT / 'config/downloads.json').read_text())
+        verify = (ROOT / 'verify.sh').read_text()
+        self.assertIn('repository brave', desktop)
+        self.assertIn('D16166072CACDF2C9429CBF11BF41E37D039F691', desktop)
+        self.assertIn('apt_install brave-browser', desktop)
+        self.assertIn('locked_download artcraft_launcher', desktop)
+        self.assertEqual(downloads['artcraft_launcher']['version'], 'v0.7.0')
+        self.assertIn('linux-aarch64.deb', downloads['artcraft_launcher']['url'])
+        self.assertIn('package_check Brave brave-browser', verify)
+        self.assertIn("package_check 'ArtCraft Launcher' artcraft-launcher", verify)
 
     def test_action_errexit_and_required_optional_boundaries(self):
         with tempfile.TemporaryDirectory() as d:
@@ -277,7 +304,7 @@ touch "$WS_TEST_DIR/executed"
 
     def test_locks_have_explicit_architecture_and_digest(self):
         locks = json.loads((ROOT / 'config/downloads.json').read_text())
-        self.assertEqual(len(locks), 10)
+        self.assertEqual(len(locks), 11)
         for item in locks.values():
             self.assertTrue(item['url'].startswith('https://'))
             if item.get('architecture') == 'all':

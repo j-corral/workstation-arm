@@ -40,7 +40,7 @@ kde_refresh_theme_login_hook() {
 }
 
 kde_configure_login() {
-    local session='' entry entries sddm_home
+    local session='' current_session='' entry entries sddm_home
     need_commands kwriteconfig6 sddm debconf-set-selections systemctl
     entries=$(dpkg-query -L plasma-session-x11)
     # Discover the packaged session name rather than assuming plasmax11.
@@ -56,7 +56,13 @@ kde_configure_login() {
     sddm_home=$(getent passwd sddm | cut -d: -f6)
     [[ $sddm_home == /* && -d $sddm_home ]] || { fail 'SDDM home directory is missing'; return 1; }
     sudo test ! -L "$sddm_home/state.conf"
-    sudo -u sddm kwriteconfig6 --file "$sddm_home/state.conf" --group Last --key Session "$session"
+    current_session=$(sudo -u sddm kreadconfig6 --file "$sddm_home/state.conf" --group Last --key Session 2>/dev/null || true)
+    # A later KDE rerun must not undo a deliberate SDDM selection of Plasma
+    # Wayland.  New installations retain the conservative X11 default for
+    # Parallels multi-display recovery.
+    if [[ $current_session != plasma*.desktop ]]; then
+        sudo -u sddm kwriteconfig6 --file "$sddm_home/state.conf" --group Last --key Session "$session"
+    fi
 
     # Keep Debian's selection and systemd's boot alias consistent. No --now:
     # switching the boot service must not stop the running GNOME session.

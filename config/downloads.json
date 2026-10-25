@@ -48,6 +48,13 @@
     "digest": "bda69398c266353452911cbac87b86ef5c6de8f2efd0f5c234d88afaf1e11363",
     "evidence": "https://api.github.com/repos/usebruno/bruno/releases/tags/v4.1.0"
   },
+  "artcraft_launcher": {
+    "version": "v0.7.0",
+    "url": "https://github.com/storytold/craft-launcher/releases/download/v0.7.0/artcraft-launcher-0.7.0-linux-aarch64.deb",
+    "algorithm": "sha256",
+    "digest": "87312abf3a7b1d616c8a320f6cd0a4a264f46063368372413aa2dfffdd4dc7d8",
+    "evidence": "https://github.com/storytold/craft-launcher/releases/tag/v0.7.0"
+  },
   "toolbox": {
     "version": "3.8.1.88030",
     "url": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.8.1.88030-arm64.tar.gz",
