@@ -28,6 +28,21 @@ if command -v kwriteconfig6 >/dev/null 2>&1; then
     kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light
 fi
 
+force_translucent_panels() {
+    # A previous Breeze session can leave a panel with a forced standard
+    # background, which masks MacTahoe's translucent SVG assets.  Apply the
+    # documented Plasma applet background hint to every panel at login without
+    # rebuilding its layout or touching its widgets.
+    command -v qdbus6 >/dev/null 2>&1 || return 0
+    qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript '
+var workstationPanels = panels();
+for (var index = 0; index < workstationPanels.length; ++index) {
+    workstationPanels[index].userBackgroundHints = 2;
+}
+' >/dev/null 2>&1 || true
+}
+force_translucent_panels
+
 selected() {
     local name=$1 choices="$config_dir/workstation/components.conf"
     [[ -r $choices ]] && grep -Fxq "$name=1" "$choices"

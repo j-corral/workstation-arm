@@ -135,12 +135,11 @@ artcraft_install() {
     manual 'ArtCraft Launcher' 'Installed. Open it to select PdfCraft, WordCraft, DeckCraft, GridCraft or another Craft app; it verifies and updates the selected ARM64 applications itself.'
 }
 chatgpt_install() {
-    local package="$WS_TMP/chatgpt_arm64.deb" codex_home="${CODEX_HOME:-$HOME/.codex}" codex_config
-    codex_config="$codex_home/config.toml"
+    local package="$WS_TMP/chatgpt_arm64.deb"
     if package_installed chatgpt; then
         [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
         need_commands chatgpt
-        chatgpt_configure_lmstudio "$codex_home" "$codex_config"
+        chatgpt_configure_lmstudio
         manual ChatGPT 'Official ARM64 ChatGPT desktop app already installed; APT handles future updates.'
         return
     fi
@@ -156,18 +155,16 @@ chatgpt_install() {
     package_installed chatgpt
     [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
     need_commands chatgpt
-    chatgpt_configure_lmstudio "$codex_home" "$codex_config"
+    chatgpt_configure_lmstudio
     manual ChatGPT 'Official ARM64 ChatGPT desktop preview installed. Launch ChatGPT from Plasma or run chatgpt, then sign in interactively. The package configures signed APT updates.'
 }
 chatgpt_configure_lmstudio() {
-    local codex_home=$1 codex_config=$2
-    [[ ! -L $codex_home && ! -L $codex_config ]] || { fail 'Refusing symlink Codex configuration path.'; return 1; }
-    install -d -m 0700 "$codex_home"
-    if [[ ! -e $codex_config ]]; then
-        install -m 0600 "$WS_ROOT/config/codex-lmstudio.toml" "$codex_config"
+    local state
+    state=$(ensure_codex_lmstudio_config)
+    if [[ $state == created ]]; then
         manual 'ChatGPT / LM Studio' 'Codex mode defaults to the Mac LM Studio endpoint. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
     else
-        manual 'ChatGPT / LM Studio' "Existing $codex_config retained; copy config/codex-lmstudio.toml manually if you want the Mac LM Studio Codex profile."
+        manual 'ChatGPT / LM Studio' "Existing ${CODEX_HOME:-$HOME/.codex}/config.toml retained; it was not replaced."
     fi
 }
 solaar_install() {

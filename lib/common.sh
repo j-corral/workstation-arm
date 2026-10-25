@@ -116,6 +116,19 @@ configure_optional_components() {
     unset -f component_default saved_value category_default
 }
 selected() { [[ -f ${WS_COMPONENTS:-} ]] && grep -qx "$1=1" "$WS_COMPONENTS"; }
+ensure_codex_lmstudio_config() {
+    local codex_home codex_config
+    codex_home="${CODEX_HOME:-$HOME/.codex}"
+    codex_config="$codex_home/config.toml"
+    [[ ! -L $codex_home && ! -L $codex_config ]] || { fail 'Refusing symlink Codex configuration path.'; return 1; }
+    install -d -m 0700 "$codex_home"
+    if [[ ! -e $codex_config ]]; then
+        install -m 0600 "$WS_ROOT/config/codex-lmstudio.toml" "$codex_config"
+        printf 'created\n'
+    else
+        printf 'retained\n'
+    fi
+}
 # Each action runs in a fresh Bash process: optional-error handling cannot disable
 # errexit inside action functions (Bash's `if function` pitfall).
 component() {

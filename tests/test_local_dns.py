@@ -72,6 +72,18 @@ class LocalDnsTests(unittest.TestCase):
         self.assertTrue(result['dns']['enable_dnssec'])
         self.assertEqual(result['user_rules'], ['@@||client.example^'])
 
+    def test_normalized_managed_quad9_bootstrap_is_migrated(self):
+        migrator = ROOT / 'tools/migrate_adguard_cloudflare.py'
+        config = yaml.safe_load(TEMPLATE.read_text())
+        config['dns']['upstream_dns'] = ['tls://dns.quad9.net']
+        config['dns']['bootstrap_dns'] = ['9.9.9.9']
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'AdGuardHome.yaml'
+            path.write_text(yaml.safe_dump(config, sort_keys=False))
+            subprocess.run(['python3', str(migrator), str(path)], check=True)
+            result = yaml.safe_load(path.read_text())
+        self.assertEqual(result['dns']['upstream_dns'], ['tls://security.cloudflare-dns.com'])
+
     def test_service_uses_adguard_foreground_service_mode(self):
         service = (ROOT / 'config/adguard-home.service').read_text()
         self.assertIn('AdGuardHome -s run', service)

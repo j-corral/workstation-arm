@@ -2,13 +2,19 @@
 # Host inference needs only an HTTP client in the VM. LM Studio and models run
 # on macOS; network address/authentication are configured interactively.
 codex_install() {
+    local config_state
     if ! command -v codex >/dev/null; then
         download https://chatgpt.com/codex/install.sh "$WS_TMP/codex-install.sh"
         CODEX_NON_INTERACTIVE=1 sh "$WS_TMP/codex-install.sh"
     fi
     need_commands codex
     codex --version
-    manual 'Codex CLI' 'Launch codex in a project and sign in interactively. No account or API key is configured by bootstrap.'
+    config_state=$(ensure_codex_lmstudio_config)
+    if [[ $config_state == created ]]; then
+        manual 'Codex CLI' 'Created ~/.codex/config.toml for the Mac LM Studio endpoint. Launch codex in a project and sign in interactively; no API key is stored.'
+    else
+        manual 'Codex CLI' 'Existing ~/.codex/config.toml retained; launch codex in a project and sign in interactively.'
+    fi
 }
 claude_install() {
     repository claude-code https://downloads.claude.ai/claude-code/apt/stable stable main https://downloads.claude.ai/keys/claude-code.asc asc 31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE

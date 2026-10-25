@@ -16,6 +16,12 @@ class ThemeLayoutTests(unittest.TestCase):
         self.assertIn('/usr/local/lib/workstation/mactahoe-first-login', kde)
         self.assertNotIn('Exec=$HOME/.local/bin/workstation-mactahoe-apply', kde)
 
+    def test_existing_panels_are_forced_to_use_the_translucent_theme_variant(self):
+        script = SCRIPT.read_text()
+        self.assertIn('force_translucent_panels', script)
+        self.assertIn('userBackgroundHints = 2', script)
+        self.assertIn('org.kde.PlasmaShell.evaluateScript', script)
+
     def test_first_login_backup_and_idempotency(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)
