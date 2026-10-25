@@ -235,6 +235,10 @@ printf 'SHOULD_NOT_CONTINUE'
         self.assertIn('# model_provider = "openai"', lmstudio)
         self.assertIn("package_check 'ChatGPT desktop' chatgpt", verify)
 
+    def test_delegated_root_run_returns_codex_configuration_to_daily_user(self):
+        bootstrap = (ROOT / 'bootstrap.sh').read_text()
+        self.assertIn('"$HOME/.codex"', bootstrap)
+
     def test_brave_and_artcraft_have_arm64_install_paths(self):
         desktop = (ROOT / 'install/08-desktop-apps.sh').read_text()
         downloads = json.loads((ROOT / 'config/downloads.json').read_text())

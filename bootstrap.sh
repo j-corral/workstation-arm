@@ -100,7 +100,7 @@ finish() {
         printf '\nDry-run complete. Nothing installed; target/package availability not validated.\n'
     fi
     if [[ -n ${WS_AS_USER:-} ]]; then
-        chown -R "$WS_AS_USER:$WS_AS_USER" "$HOME/.config" "$HOME/.local" "$HOME/.ssh" 2>/dev/null || true
+        chown -R "$WS_AS_USER:$WS_AS_USER" "$HOME/.config" "$HOME/.local" "$HOME/.ssh" "$HOME/.codex" 2>/dev/null || true
         [[ ! -e $HOME/.zshrc ]] || chown "$WS_AS_USER:$WS_AS_USER" "$HOME/.zshrc"
     fi
     exit "$rc"
