@@ -22,6 +22,9 @@ class ThemeLayoutTests(unittest.TestCase):
         self.assertIn('userBackgroundHints = 2', script)
         self.assertIn('org.kde.PlasmaShell.evaluateScript', script)
 
+    def test_first_login_disables_unstable_kwin_translucency_effect(self):
+        self.assertIn('--group Plugins --key translucencyEnabled false', SCRIPT.read_text())
+
     def test_first_login_backup_and_idempotency(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)

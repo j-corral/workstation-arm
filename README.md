@@ -238,8 +238,11 @@ end of a real run. In particular:
   installs Plasma X11 alongside Wayland as a recovery session. If Parallels
   **Use All Displays** makes Plasma Wayland stop accepting pointer clicks,
   reboot or log out, select **Plasma (X11)** from SDDM's session chooser, then
-  sign in. Plasma Wayland remains available from the SDDM session chooser after
-  its graphics and input behavior have been validated for the VM.
+  sign in. Rerunning the KDE module restores X11 as the SDDM default. Plasma
+  Wayland remains available from the SDDM session chooser for manual testing.
+  The MacTahoe setup disables KWin's separate window-translucency effect: it is
+  unstable in this Plasma release, while the translucent dock and panels remain
+  themed normally.
 - Open Toolbox, test its GUI on 26.04, authenticate, and install only the required
   PhpStorm/PyCharm/Rider/etc. IDEs. Test Zed and Electron apps separately.
 

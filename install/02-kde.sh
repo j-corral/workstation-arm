@@ -57,10 +57,10 @@ kde_configure_login() {
     [[ $sddm_home == /* && -d $sddm_home ]] || { fail 'SDDM home directory is missing'; return 1; }
     sudo test ! -L "$sddm_home/state.conf"
     current_session=$(sudo -u sddm kreadconfig6 --file "$sddm_home/state.conf" --group Last --key Session 2>/dev/null || true)
-    # A later KDE rerun must not undo a deliberate SDDM selection of Plasma
-    # Wayland.  New installations retain the conservative X11 default for
-    # Parallels multi-display recovery.
-    if [[ $current_session != plasma*.desktop ]]; then
+    # Parallels' virtual GPU can make KWin Wayland lose pointer input or crash,
+    # especially after a display-topology change. Always restore the known
+    # stable X11 session on a KDE rerun; Wayland remains selectable manually.
+    if [[ $current_session != "$session" ]]; then
         sudo -u sddm kwriteconfig6 --file "$sddm_home/state.conf" --group Last --key Session "$session"
     fi
 
@@ -150,6 +150,10 @@ mactahoe_install() {
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__MacTahoe-Light
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XAI
     kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ''
+    # KWin's Translucency desktop effect has a long-standing JavaScript error
+    # that can freeze Plasma. The MacTahoe panel transparency is SVG/QML-based
+    # and does not need this window-level effect.
+    kwriteconfig6 --file kwinrc --group Plugins --key translucencyEnabled false
     install -d -m 0700 "$config_dir/autostart"
     # The daily desktop account can be renamed at first boot. Keep the launcher
     # outside its home so its absolute Exec path remains valid after that move.

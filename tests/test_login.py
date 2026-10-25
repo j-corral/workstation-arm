@@ -24,6 +24,7 @@ class LoginTests(unittest.TestCase):
         self.assertIn('without\n    # downloading or reapplying the optional theme', source)
         self.assertIn('kde_disable_kwallet', source)
         self.assertIn('--key Enabled false', source)
+        self.assertIn('--group Plugins --key translucencyEnabled false', source)
         self.assertIn('DisplayCommand=/usr/local/lib/workstation/sddm-xsetup', source)
         self.assertIn('org.workstation.splash', source)
 
@@ -39,7 +40,7 @@ class LoginTests(unittest.TestCase):
         self.assertIn('Animation.Infinite', splash)
         self.assertNotIn('Apple', splash)
 
-    def run_selection(self, present):
+    def run_selection(self, present, current_session=''):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
             sessions = work / 'sessions'
@@ -59,6 +60,7 @@ dpkg-query() { printf '%s/sessions/plasmax11.desktop\n' "$TEST_DIR"; }
 getent() { printf 'sddm:x:100:100::%s:/bin/false\n' "$TEST_DIR"; }
 sudo() {
     printf '%s\n' "$*" >> "$TEST_DIR/calls"
+    if [[ $1 == -u && $3 == kreadconfig6 ]]; then printf '%s\n' "$CURRENT_SESSION"; return; fi
     if [[ $1 == debconf-set-selections ]]; then cat >> "$TEST_DIR/calls"; fi
 }
 readlink() { printf '/usr/lib/systemd/system/sddm.service\n'; }
@@ -66,7 +68,7 @@ kde_configure_login
 '''
             result = subprocess.run(['bash', '-c', script], capture_output=True, text=True,
                                     env={**os.environ, 'TEST_DIR': directory, 'WS_TMP': directory,
-                                         'WS_ROOT': str(ROOT)})
+                                         'WS_ROOT': str(ROOT), 'CURRENT_SESSION': current_session})
             calls = (work / 'calls').read_text() if (work / 'calls').exists() else ''
             return result, calls
 
@@ -79,6 +81,11 @@ kde_configure_login
         self.assertIn('systemctl set-default graphical.target', calls)
         for forbidden in ('--now', ' restart ', ' stop ', ' start ', 'Autologin'):
             self.assertNotIn(forbidden, calls)
+
+    def test_kde_rerun_restores_x11_after_wayland_selection(self):
+        result, calls = self.run_selection(True, 'plasma.desktop')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('--group Last --key Session plasmax11.desktop', calls)
 
     def test_missing_session_does_not_change_display_manager(self):
         result, calls = self.run_selection(False)

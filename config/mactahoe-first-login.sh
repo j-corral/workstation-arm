@@ -26,6 +26,9 @@ fi
 plasma-apply-lookandfeel --apply com.github.vinceliuice.MacTahoe-Light
 if command -v kwriteconfig6 >/dev/null 2>&1; then
     kwriteconfig6 --file plasmarc --group Theme --key name MacTahoe-Light
+    # Keep the panel theme translucent but disable KWin's separate, unstable
+    # window translucency effect. It can freeze both X11 and Wayland sessions.
+    kwriteconfig6 --file kwinrc --group Plugins --key translucencyEnabled false
 fi
 
 force_translucent_panels() {
