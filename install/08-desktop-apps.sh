@@ -139,7 +139,7 @@ chatgpt_install() {
     if package_installed chatgpt; then
         [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
         need_commands chatgpt
-        chatgpt_configure_lmstudio
+        chatgpt_configure_kapitsa
         manual ChatGPT 'Official ARM64 ChatGPT desktop app already installed; APT handles future updates.'
         return
     fi
@@ -155,16 +155,16 @@ chatgpt_install() {
     package_installed chatgpt
     [[ $(dpkg-query -W -f='${Architecture}' chatgpt) == arm64 ]]
     need_commands chatgpt
-    chatgpt_configure_lmstudio
+    chatgpt_configure_kapitsa
     manual ChatGPT 'Official ARM64 ChatGPT desktop preview installed. Launch ChatGPT from Plasma or run chatgpt, then sign in interactively. The package configures signed APT updates.'
 }
-chatgpt_configure_lmstudio() {
+chatgpt_configure_kapitsa() {
     local state
-    state=$(ensure_codex_lmstudio_config)
+    state=$(ensure_codex_kapitsa_config)
     if [[ $state == created ]]; then
-        manual 'ChatGPT / LM Studio' 'Codex mode defaults to the Mac LM Studio endpoint, with selectable Qwen 27B Code / Qwen 4B Quotidien models plus Playwright, Local RAG, Lightpanda, GitLab and Plane MCP configured. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
+        manual 'ChatGPT / Kapitsa' 'Codex mode defaults to the authenticated Mac Kapitsa endpoint. Run tools/sync_codex_kapitsa_catalog.py after the server starts to expose its actual models. Playwright, Local RAG, Lightpanda, GitLab and Plane MCP are configured. Restart ChatGPT after installation; Chat and Work remain OpenAI-hosted.'
     else
-        manual 'ChatGPT / LM Studio' "Existing ${CODEX_HOME:-$HOME/.codex}/config.toml retained; its workstation model catalog and managed Playwright, Local RAG, Lightpanda, GitLab and Plane MCP block were refreshed."
+        manual 'ChatGPT / Kapitsa' "Existing ${CODEX_HOME:-$HOME/.codex}/config.toml retained; use tools/sync_codex_kapitsa_catalog.py to refresh models served by Kapitsa. Its managed Playwright, Local RAG, Lightpanda, GitLab and Plane MCP block was refreshed."
     fi
 }
 solaar_install() {

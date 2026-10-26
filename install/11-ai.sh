@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Host inference needs only an HTTP client in the VM. LM Studio and models run
-# on macOS; network address/authentication are configured interactively.
+# Host inference needs only an HTTP client in the VM. Kapitsa and models run on
+# macOS; network address/authentication are configured interactively.
 lightpanda_install() {
     local binary="$WS_TMP/lightpanda"
     if command -v lightpanda >/dev/null; then
@@ -36,11 +36,11 @@ codex_install() {
     fi
     need_commands codex
     codex --version
-    config_state=$(ensure_codex_lmstudio_config)
+    config_state=$(ensure_codex_kapitsa_config)
     if [[ $config_state == created ]]; then
-        manual 'Codex CLI' 'Created ~/.codex/config.toml for the Mac LM Studio endpoint and installed the Qwen 27B Code / Qwen 4B Quotidien model catalog, plus Playwright, Local RAG, Lightpanda, GitLab and Plane MCP. Local RAG is confined to ~/Documents/Local-RAG. RTK is configured globally for Codex with telemetry disabled. Run codex mcp login gitlab and codex mcp login plane to authorize the remote services; no API key is stored.'
+        manual 'Codex CLI' 'Created ~/.codex/config.toml for the authenticated Mac Kapitsa endpoint and installed its fallback model catalog, plus Playwright, Local RAG, Lightpanda, GitLab and Plane MCP. Run tools/sync_codex_kapitsa_catalog.py after Kapitsa starts to discover served models. Local RAG is confined to ~/Documents/Local-RAG. RTK is configured globally for Codex with telemetry disabled. Run codex mcp login gitlab and codex mcp login plane to authorize the remote services; no API key is stored.'
     else
-        manual 'Codex CLI' 'Retained existing ~/.codex/config.toml and refreshed the workstation model catalog and managed Playwright, Local RAG, Lightpanda, GitLab and Plane MCP block. RTK is configured globally for Codex with telemetry disabled. Run codex mcp login gitlab and codex mcp login plane to authorize the remote services.'
+        manual 'Codex CLI' 'Retained existing ~/.codex/config.toml and its live Kapitsa model catalog, then refreshed the managed Playwright, Local RAG, Lightpanda, GitLab and Plane MCP block. Run tools/sync_codex_kapitsa_catalog.py after Kapitsa starts to refresh discovered models. RTK is configured globally for Codex with telemetry disabled. Run codex mcp login gitlab and codex mcp login plane to authorize the remote services.'
     fi
 }
 claude_install() {
@@ -50,9 +50,21 @@ claude_install() {
     claude --version
     manual 'Claude Code' 'Launch claude in a project and authenticate interactively. No account or API key is configured by bootstrap.'
 }
+curlmd_skill_install() {
+    local skill_root="${CODEX_HOME:-$HOME/.codex}/skills/curl-md"
+    # curl.md publishes the supported Codex skill through the Agent Skills
+    # installer. It fetches public pages through curl.md; no service token is
+    # created or stored by this bootstrap.
+    apt_install nodejs npm
+    need_commands npx
+    as_workstation_user npx --yes skills add https://curl.md --agent codex --yes
+    [[ -f $skill_root/SKILL.md ]] || { fail "curl.md skill was not installed at $skill_root"; return 1; }
+    manual 'curl.md skill' 'Installed for Codex. Use it only for public documentation, articles, changelogs and reference pages: never send client URLs, private repositories, authenticated links, ticket URLs or secrets to curl.md.'
+}
 main() {
     if selected ai_codex; then component optional 'Codex CLI' codex_install 'Selected official CLI.'; else record SKIPPED 'Codex CLI' 'Not selected in configurator.'; fi
     if selected ai_claude; then component optional 'Claude Code' claude_install 'Selected official CLI.'; else record SKIPPED 'Claude Code' 'Not selected in configurator.'; fi
-    record SKIPPED 'Guest inference runtime' 'LM Studio and all models stay on macOS; no guest daemon or model download is needed for HTTP API access.'
-    manual 'Mac LM Studio API' 'On macOS, start the LM Studio server with Serve on Local Network and authentication. Use the Mac address reachable from Parallels in guest applications; verify with ./verify.sh --lm-host http://HOST_IP:1234.'
+    if selected ai_curlmd; then component optional 'curl.md skill' curlmd_skill_install 'Selected official Codex skill; public URLs only.'; else record SKIPPED 'curl.md skill' 'Not selected in configurator.'; fi
+    record SKIPPED 'Guest inference runtime' 'Kapitsa and all models stay on macOS; no guest daemon or model download is needed for HTTP API access.'
+    manual 'Mac Kapitsa API' 'On macOS, start Kapitsa on the private Parallels-reachable host address with --api-key. In Ubuntu, export LLM_API_KEY privately, run tools/sync_codex_kapitsa_catalog.py, then restart Codex.'
 }

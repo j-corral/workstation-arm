@@ -21,10 +21,11 @@ Post-install manual checklist (only for applicable installed components):
 [ ] Arrange Proton VPN setup with IT (KDE is outside documented support)
 [ ] Ask client IT for its approved Bitdefender BEST Linux ARM64 kit; IT installs/enrolls it, then check systemctl status bdsec*
 [ ] Launch codex and claude from a project; sign in to each account interactively if permitted
-[ ] Start LM Studio's API server on macOS; enable network access and authentication on the approved private VM-to-host route
-[ ] From Ubuntu, run ./verify.sh --lm-host http://HOST_IP:1234 and configure chosen apps with base URL http://HOST_IP:1234/v1
+[ ] If curl.md was selected, use it only for public documentation/articles; never provide private client URLs, tickets, repositories, authenticated links or secrets
+[ ] Start Kapitsa on macOS with --host, --port and --api-key on the approved private VM-to-host route
+[ ] From Ubuntu, run ./verify.sh --kapitsa-host http://HOST_IP:8000, source LLM_API_KEY privately and synchronize the Codex model catalog
 [ ] Test inference with a non-sensitive prompt and confirm macOS handled it; keep models on macOS
 [ ] Review/activate OpenSnitch and test all VPN/AI paths
 [ ] Review Parallels sharing/isolation and clipboard policy
-[ ] Run ./verify.sh; explicitly opt into --docker-hello and --lm-link
+[ ] Run ./verify.sh; explicitly opt into --docker-hello and --kapitsa-host when the Mac server is running
 [ ] Take a clean post-bootstrap snapshot if client policy permits

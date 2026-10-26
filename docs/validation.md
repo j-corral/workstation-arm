@@ -66,9 +66,8 @@ Completed:
   extraction checks; executable ARM64 headers and Bruno's DEB metadata were
   inspected. The host's `ar` naming difference required a direct AR-header reader
   for Bruno's control metadata; the installer uses Ubuntu's standard `dpkg-deb`.
-- Proton Mail's official download was confirmed amd64. LM Studio's full ARM64
-  bundle was inspected and found to contain a GGUF model; it was removed from
-  automatic installation rather than claiming model-free support.
+- Proton Mail's official download was confirmed amd64. Kapitsa inference stays
+  on macOS; no guest model runtime is installed.
 
 Not validated here:
 
@@ -79,7 +78,7 @@ Not validated here:
 - Plasma/Parallels graphics, Zed Vulkan, GUI application startup and Electron
   sandbox compatibility.
 - Docker daemon/Compose/Buildx operation or hello-world execution in the guest.
-- VPN coexistence, OpenSnitch rule behavior, Mac LM Studio API reachability or host inference.
+- VPN coexistence, OpenSnitch rule behavior, Mac Kapitsa API reachability or host inference.
 
 Guest acceptance procedure:
 
@@ -92,7 +91,7 @@ Guest acceptance procedure:
    unchanged pre-existing user configuration outside managed sections.
 6. Enroll services separately with IT, activate/review OpenSnitch from a console,
    test all VPN paths and complete the manual checklist. Confirm host inference
-   through the macOS LM Studio API with a non-sensitive prompt.
+   through the macOS Kapitsa API with a non-sensitive prompt.
 7. Capture an approved post-bootstrap snapshot; do not commit enrollment data.
 
 ## French keyboard follow-up — 2026-09-22

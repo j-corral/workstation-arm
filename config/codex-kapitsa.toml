@@ -1,0 +1,31 @@
+# This config is read by Codex CLI and the Codex view in the ChatGPT desktop
+# application. ChatGPT Chat and Work remain ChatGPT cloud features: they do
+# not use OpenAI-compatible local endpoints.
+
+# Kapitsa runs on the macOS host; the Ubuntu guest reaches its authenticated
+# OpenAI-compatible API over the private Parallels network. The API key stays
+# in the user's session environment (LLM_API_KEY), never in this file.
+# Run tools/sync_codex_kapitsa_catalog.py after Kapitsa starts to discover the
+# models actually served by the host.
+model_provider = "kapitsa"
+model = "qwen3.6-35b-a3b"
+# Kapitsa is serving a 256K context. Its own Codex launcher compacts at 90%
+# of that size, which avoids compacting each interactive turn.
+model_context_window = 235000
+
+[model_providers.kapitsa]
+name = "Kapitsa on Mac"
+base_url = "http://192.168.1.25:8000/v1"
+env_key = "LLM_API_KEY"
+wire_api = "responses"
+
+# To use OpenAI instead, comment the three active settings above and uncomment
+# these lines. Authenticate in ChatGPT or Codex interactively; do not put API
+# keys in this file.
+# model_provider = "openai"
+# model = "gpt-6.1-sol"
+# openai_base_url = "https://api.openai.com/v1"
+
+# Workstation-managed MCP server definitions are appended below. They are kept
+# in a separate managed block so rerunning bootstrap preserves your own Codex
+# configuration.

@@ -3,7 +3,7 @@
 # shellcheck source=lib/logging.sh
 source "$WS_ROOT/lib/logging.sh"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
-export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.bun/bin:/usr/sbin:$PATH"
 fail() { log ERROR "$*"; return 1; }
 workstation_user() { printf '%s' "${WS_AS_USER:-$(id -un)}"; }
 as_workstation_user() {
@@ -92,14 +92,14 @@ configure_optional_components() {
             choices+=$(whiptail --title 'Desktop applications' --separate-output --checklist 'Choose desktop applications' 22 78 12 desktop_chatgpt 'ChatGPT (official ARM64 preview)' "$(component_default desktop_chatgpt)" desktop_onlyoffice 'ONLYOFFICE' "$(component_default desktop_onlyoffice)" desktop_obsidian 'Obsidian' "$(component_default desktop_obsidian)" desktop_bruno 'Bruno' "$(component_default desktop_bruno)" desktop_brave 'Brave Browser' "$(component_default desktop_brave)" desktop_artcraft 'ArtCraft Launcher (PdfCraft, WordCraft...)' "$(component_default desktop_artcraft)" desktop_solaar 'Solaar (Logitech)' "$(component_default desktop_solaar)" desktop_bitwarden 'Bitwarden' "$(component_default desktop_bitwarden)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
         fi
         if grep -Fqx ai <<< "$areas"; then
-            choices+=$'\n'$(whiptail --title 'AI tools' --separate-output --checklist 'Choose AI command-line tools' 16 78 6 ai_codex 'Codex CLI' "$(component_default ai_codex)" ai_claude 'Claude Code' "$(component_default ai_claude)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
+            choices+=$'\n'$(whiptail --title 'AI tools' --separate-output --checklist 'Choose AI command-line tools' 18 78 7 ai_codex 'Codex CLI' "$(component_default ai_codex)" ai_claude 'Claude Code' "$(component_default ai_claude)" ai_curlmd 'curl.md skill for Codex (public URLs only)' "$(component_default ai_curlmd)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
         fi
         if grep -Fqx git <<< "$areas"; then
             choices+=$'\n'$(whiptail --title 'Git services' --separate-output --checklist 'Choose Git service command-line tools' 16 78 6 git_github 'GitHub CLI' "$(component_default git_github)" git_gitlab 'GitLab CLI' "$(component_default git_gitlab)" 3>&1 1>&2 2>&3) || { unset -f component_default category_default; return 1; }
         fi
     else
         areas=$'desktop\nai\ngit'
-        choices=$'desktop_chatgpt\ndesktop_onlyoffice\ndesktop_obsidian\ndesktop_bruno\ndesktop_brave\ndesktop_artcraft\ndesktop_solaar\ndesktop_bitwarden\nai_codex\nai_claude\ngit_github\ngit_gitlab'
+        choices=$'desktop_chatgpt\ndesktop_onlyoffice\ndesktop_obsidian\ndesktop_bruno\ndesktop_brave\ndesktop_artcraft\ndesktop_solaar\ndesktop_bitwarden\nai_codex\nai_claude\nai_curlmd\ngit_github\ngit_gitlab'
     fi
     {
         printf 'area_accounts=1\n'
@@ -107,7 +107,7 @@ configure_optional_components() {
             if [[ $scope != all && $tag != "$scope" && -f $config ]]; then saved_value "area_$tag"
             elif grep -Fqx "$tag" <<< "$areas"; then printf 'area_%s=1\n' "$tag"; else printf 'area_%s=0\n' "$tag"; fi
         done
-        for tag in desktop_chatgpt desktop_onlyoffice desktop_obsidian desktop_bruno desktop_brave desktop_artcraft desktop_solaar desktop_bitwarden ai_codex ai_claude git_github git_gitlab; do
+        for tag in desktop_chatgpt desktop_onlyoffice desktop_obsidian desktop_bruno desktop_brave desktop_artcraft desktop_solaar desktop_bitwarden ai_codex ai_claude ai_curlmd git_github git_gitlab; do
             if [[ $scope != all && $tag != "${scope}_"* && -f $config ]]; then saved_value "$tag"
             elif tr -d '"' <<< "$choices" | grep -Fqx "$tag"; then printf '%s=1\n' "$tag"; else printf '%s=0\n' "$tag"; fi
         done
@@ -116,19 +116,23 @@ configure_optional_components() {
     unset -f component_default saved_value category_default
 }
 selected() { [[ -f ${WS_COMPONENTS:-} ]] && grep -qx "$1=1" "$WS_COMPONENTS"; }
-ensure_codex_lmstudio_config() {
+ensure_codex_kapitsa_config() {
     local codex_home codex_config catalog_path mcp_config local_rag_base local_rag_data local_rag_cache state=retained
     codex_home="${CODEX_HOME:-$HOME/.codex}"
     codex_config="$codex_home/config.toml"
     [[ ! -L $codex_home && ! -L $codex_config ]] || { fail 'Refusing symlink Codex configuration path.'; return 1; }
     install -d -m 0700 "$codex_home"
     if [[ ! -e $codex_config ]]; then
-        install -m 0600 "$WS_ROOT/config/codex-lmstudio.toml" "$codex_config"
+        install -m 0600 "$WS_ROOT/config/codex-kapitsa.toml" "$codex_config"
         state=created
     fi
     catalog_path="$codex_home/workstation-model-catalog.json"
     [[ ! -L $catalog_path ]] || { fail 'Refusing symlink Codex model catalog path.'; return 1; }
-    install -m 0600 "$WS_ROOT/config/codex-model-catalog.json" "$catalog_path"
+    # The repository catalog is only a safe first-run fallback. A live Kapitsa
+    # discovery must survive later bootstrap reruns.
+    if [[ ! -e $catalog_path ]]; then
+        install -m 0600 "$WS_ROOT/config/codex-model-catalog.json" "$catalog_path"
+    fi
     python3 "$WS_ROOT/tools/manage_codex_model_catalog.py" "$codex_config" "$catalog_path"
     local_rag_base="$HOME/Documents/Local-RAG"
     local_rag_data="$HOME/.local/share/workstation/local-rag"

@@ -1,38 +1,16 @@
 {
   "models": [
     {
-      "slug": "qwen/qwen3.8-27b",
-      "display_name": "Qwen3.8 27B — Code",
-      "description": "Code et tâches complexes via LM Studio",
+      "slug": "qwen3.6-35b-a3b",
+      "display_name": "Qwen 3.6 35B A3B — Kapitsa",
+      "description": "Modèle Kapitsa du Mac ; exécuter la synchronisation après le démarrage du serveur.",
       "visibility": "list",
       "supported_in_api": true,
       "priority": 1,
       "supported_reasoning_levels": [],
       "shell_type": "unified_exec",
       "support_verbosity": false,
-      "context_window": 32768,
-      "truncation_policy": {
-        "mode": "tokens",
-        "limit": 5000
-      },
-      "input_modalities": [
-        "text"
-      ],
-      "experimental_supported_tools": [],
-      "tool_mode": "direct",
-      "base_instructions": "Tu es un agent de programmation et un assistant pour les tâches quotidiennes sous Linux. Respecte les instructions du projet et les permissions accordées. Utilise les outils disponibles pour examiner les fichiers, effectuer les actions demandées et vérifier les résultats. N'invente jamais de résultats d'outils. Indique clairement les limites et les erreurs rencontrées."
-    },
-    {
-      "slug": "qwen/qwen3-4b-2507",
-      "display_name": "Qwen3 4B 2507 — Quotidien",
-      "description": "Tâches quotidiennes via LM Studio",
-      "visibility": "list",
-      "supported_in_api": true,
-      "priority": 2,
-      "supported_reasoning_levels": [],
-      "shell_type": "unified_exec",
-      "support_verbosity": false,
-      "context_window": 16384,
+      "context_window": 235000,
       "truncation_policy": {
         "mode": "tokens",
         "limit": 5000

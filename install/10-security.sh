@@ -58,7 +58,7 @@ exec env QT_QPA_PLATFORM=xcb /usr/bin/opensnitch-ui "$@"
 EOF
     install -m 0755 "$WS_TMP/workstation-opensnitch-ui" "$HOME/.local/bin/workstation-opensnitch-ui"
     python3 "$WS_ROOT/tools/desktop_entry.py" opensnitch OpenSnitch "$HOME/.local/bin/workstation-opensnitch-ui" /usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
-    manual OpenSnitch "Active through $service. Open the Workstation launcher once after login and review specific rules for Docker, Tailscale, VPNs and the Mac LM Studio API; do not create a blanket allow rule."
+    manual OpenSnitch "Active through $service. Open the Workstation launcher once after login and review specific rules for Docker, Tailscale, VPNs and the Mac Kapitsa API; do not create a blanket allow rule."
 }
 main() {
     component required AppArmor apparmor_check 'Verify enabled kernel module, profiles and active service; never disable enforcement.'

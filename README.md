@@ -5,7 +5,7 @@ Parallels Desktop Pro on an Apple Silicon Mac. KDE Plasma and Zsh are the target
 user environment. Installation runs inside the guest, as its normal desktop user.
 
 **Read the [compatibility decisions](docs/compatibility.md) before installing.**
-LM Studio inference runs on macOS and the VM uses its HTTP API; no LM Studio
+Kapitsa inference runs on macOS and the VM uses its HTTP API; no inference
 runtime is installed in Ubuntu. Lightpanda is installed only with the optional
 Codex CLI because it is its local MCP browser. Proton Mail's inspected Linux package is
 amd64. Proton VPN setup is manual because its official support targets GNOME.
@@ -104,7 +104,7 @@ set. This also happens with `--only`. Module order is fixed:
 | `desktop` | Konsole, Foot and KeePassXC; ChatGPT, Obsidian, ONLYOFFICE, Bruno, Brave, ArtCraft Launcher, Solaar and Bitwarden are selected in the configurator. ArtCraft Launcher selects and updates PdfCraft, WordCraft and other Craft applications. Solaar maps diverted Back/Forward buttons to previous/next Plasma virtual desktop. | Optional; Proton Mail skipped |
 | `network` | Tailscale; local AdGuard Home ARM64 and Cloudflare Security DoT | Optional; Proton VPN manual |
 | `security` | AppArmor checks, normal unattended updates, OpenSnitch packages; GravityZone BEST handoff to client IT | AppArmor/updates required; OpenSnitch optional; BEST manual |
-| `ai` | Codex CLI, Claude Code CLI, RTK Codex hook, a selectable Qwen 27B Code / Qwen 4B Quotidien LM Studio catalog, Lightpanda local MCP browser, Local RAG document MCP and macOS LM Studio API guidance; **no guest LLM runtime or model download** | CLIs optional; Local RAG model downloads at its first use |
+| `ai` | Codex CLI, Claude Code CLI, optional curl.md Codex skill, RTK Codex hook, Kapitsa-backed Codex configuration and model-catalog synchronizer, Lightpanda local MCP browser, Local RAG document MCP and macOS Kapitsa API guidance; **no guest LLM runtime or model download** | CLIs optional; curl.md is public-URL-only; Local RAG model downloads at its first use |
 | `accounts` | Interactive creation/selection of the normal desktop account, root-password verification, then removal of `sudo`; the chosen developer keeps Docker access | Explicit opt-in only; required once selected; Docker group is root-equivalent |
 
 The `network` module keeps the `systemd-resolved` stub at `127.0.0.53` and
@@ -221,7 +221,7 @@ Review in Parallels, with the VM stopped where necessary:
   SSH agents, private keys or password stores implicitly.
 - Have IT approve any host inference path before sending client prompts/data.
 
-The macOS LM Studio API deliberately connects VM and host; this is **not an
+The macOS Kapitsa API deliberately connects VM and host; this is **not an
 air-gapped architecture**. The repository does not configure Parallels
 host settings, host firewall rules, bridged interfaces or host networking.
 
@@ -285,45 +285,50 @@ workstation-opensnitch-ui
 ```
 
 Review application-specific rules for Docker, Tailscale, Proton/client VPNs and
-the Mac LM Studio API. Do not create a blanket allow rule. Existing OpenSnitch
+the Mac Kapitsa API. Do not create a blanket allow rule. Existing OpenSnitch
 services/rules are preserved. Verify AppArmor with `sudo aa-status`.
 Standard Ubuntu unattended-upgrades and APT timers are enabled; existing disabled
 policies fail for review instead of being silently overwritten. Review allowed
 security origins and third-party update policy with IT.
 
-## LM Studio inference on the Mac
+## Kapitsa inference on the Mac
 
 ```text
 Ubuntu VM (HTTP client)
-    └─ private VM-to-host network → macOS LM Studio API → models / Metal inference
+    └─ private VM-to-host network → macOS Kapitsa API → models / Metal inference
 ```
 
-On the Mac, load the model in LM Studio, open Developer, start the API server,
-enable **Serve on Local Network** and **Require Authentication**, and note the
-address reachable from the Parallels guest. Restrict access to the private
-VM-to-host network. The VM needs no `llmster`, LM Link, inference runtime or
-model. From Ubuntu:
+On the Mac, start Kapitsa on the private address reachable from the Parallels
+guest and require an API key. For example:
 
 ```bash
-./verify.sh --lm-host http://HOST_IP:1234
+kapitsa serve --model 35b --host 192.168.1.25 --port 8000 --api-key "$LLM_API_KEY"
 ```
 
-Set the chosen Ubuntu app's OpenAI-compatible base URL to
-`http://HOST_IP:1234/v1` and supply its API token within that app. Do not put
-the token in this repository or the verification command. Send a non-sensitive
-test prompt and confirm on the Mac that LM Studio handled it. Repeat with the
-client VPN enabled. A reachable `/v1/models` endpoint is not inference proof.
-See [LM Studio's network server documentation](https://lmstudio.ai/docs/developer/core/server/serve-on-network)
-and [compatible API endpoints](https://lmstudio.ai/docs/developer/openai-compat).
+The VM needs no guest inference runtime or model. Store the key in a private
+environment file (mode `0600`), never in this repository. Once Kapitsa is
+running, synchronize the models it actually serves:
+
+```bash
+set -a
+source ~/.config/environment.d/kapitsa.conf
+set +a
+python3 ~/workstation-arm/tools/sync_codex_kapitsa_catalog.py
+```
+
+The command calls authenticated `GET /v1/models`, writes only
+`~/.codex/workstation-model-catalog.json` with mode `0600`, and does not print
+or persist the key. Restart Codex and begin a new conversation after a catalog
+change. A reachable `/v1/models` endpoint is not inference proof: send a
+non-sensitive test prompt and confirm on the Mac that Kapitsa handled it.
 
 When **ChatGPT (official ARM64 preview)** is selected, the bootstrap creates
 `~/.codex/config.toml` only when it does not already exist. This config points
-the **Codex** view in the ChatGPT desktop app to the Mac LM Studio endpoint and
-keeps an OpenAI configuration alternative commented in the file. It also
-installs `~/.codex/workstation-model-catalog.json`, which exposes Qwen3.8 27B
-Code and Qwen3 4B Quotidien in the Codex model selector. Load the selected
-model on the Mac before starting a Codex thread. ChatGPT's Chat and Work views
-do not use local OpenAI-compatible endpoints.
+the **Codex** view in the ChatGPT desktop app to the authenticated Mac Kapitsa
+endpoint and keeps an OpenAI configuration alternative commented in the file.
+It installs a fallback catalog, which the synchronizer replaces with the model
+IDs reported by Kapitsa. ChatGPT's Chat and Work views do not use local
+OpenAI-compatible endpoints.
 
 Alternative only, **not configured**:
 
@@ -331,7 +336,7 @@ Alternative only, **not configured**:
 Ubuntu VM → private Parallels Host-Only network → macOS Ollama API → host model
 ```
 
-If the LM Studio API cannot coexist with the client VPN, have IT review the
+If the Kapitsa API cannot coexist with the client VPN, have IT review the
 private VM-to-host route. This repo installs no Ollama, model or secondary
 inference service inside Ubuntu and makes no host networking changes.
 
@@ -340,7 +345,7 @@ inference service inside Ubuntu and makes no host networking changes.
 ```bash
 ./verify.sh                    # local inventory/status; no sudo prompt
 ./verify.sh --docker-hello     # explicit pull/run of ARM64 hello-world
-./verify.sh --lm-host http://HOST_IP:1234 # read-only Mac LM Studio API reachability
+./verify.sh --kapitsa-host http://HOST_IP:8000 # read-only Mac Kapitsa API reachability
 ./tests/run.sh                 # offline regression tests + bash -n + ShellCheck
 sudo docker system df         # disk inventory, not cleanup
 ncdu "$HOME"                  # inspect guest home usage

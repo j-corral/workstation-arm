@@ -1,6 +1,6 @@
 # Local tools; no automatic downloads or project trust.
 typeset -U path PATH
-path=("$HOME/.local/bin" "$HOME/.bun/bin" "$HOME/.lmstudio/bin" $path)
+path=("$HOME/.local/bin" "$HOME/.bun/bin" $path)
 
 # Keep the prompt focused on the current directory. Zsh expands %~ on every
 # prompt, using ~ for the home directory while retaining the path below it.

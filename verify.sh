@@ -2,16 +2,15 @@
 set -uo pipefail
 # Read-only by default. Explicit network tests are opt-in and never logged to disk.
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_GENERATE_ASPNET_CERTIFICATE=false
-export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.lmstudio/bin:/usr/sbin:$PATH"
-hello=0 link=0 dns_security=0 dns_status=0 lm_host='' failures=0
+export PATH="$HOME/.local/bin:$HOME/.bun/bin:/usr/sbin:$PATH"
+hello=0 dns_security=0 dns_status=0 inference_host='' inference_label='' failures=0
 while (( $# )); do
     case $1 in
         --docker-hello) hello=1 ;;
         --dns-security) dns_security=1 ;;
         --dns-status) dns_status=1 ;;
-        --lm-link) link=1 ;;
-        --lm-host) [[ $# -ge 2 ]] || { printf 'Missing URL after --lm-host\n' >&2; exit 2; }; lm_host=$2; shift ;;
-        --help|-h) printf 'Usage: ./verify.sh [--dns-status] [--dns-security] [--docker-hello] [--lm-host http://HOST:1234] [--lm-link]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
+        --kapitsa-host) [[ $# -ge 2 ]] || { printf 'Missing URL after --kapitsa-host\n' >&2; exit 2; }; inference_host=$2; inference_label='Mac Kapitsa API'; shift ;;
+        --help|-h) printf 'Usage: ./verify.sh [--dns-status] [--dns-security] [--docker-hello] [--kapitsa-host http://HOST:8000]\nDefault: local checks, no downloads, authentication or sudo prompt.\n'; exit 0 ;;
         *) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
     esac
     shift
@@ -167,12 +166,14 @@ codex_catalog="${CODEX_HOME:-$HOME/.codex}/workstation-model-catalog.json"
 if [[ -f $codex_catalog ]] && python3 - "$codex_catalog" <<'PY' >/dev/null 2>&1
 import json, sys
 catalog = json.load(open(sys.argv[1]))
-assert [model['slug'] for model in catalog['models']] == ['qwen/qwen3.8-27b', 'qwen/qwen3-4b-2507']
+assert isinstance(catalog['models'], list) and catalog['models']
+assert all(isinstance(model.get('slug'), str) and model['slug'] for model in catalog['models'])
+assert all(model.get('context_window', 0) >= 4096 for model in catalog['models'])
 PY
 then
-    ok 'Codex LM Studio catalog' 'Qwen 27B Code and Qwen 4B Quotidien are available for selection'
+    ok 'Codex Kapitsa catalog' 'valid local model catalog present; refresh from the Mac with tools/sync_codex_kapitsa_catalog.py'
 else
-    warn 'Codex LM Studio catalog' 'not installed or malformed'
+    warn 'Codex Kapitsa catalog' 'not installed or malformed'
 fi
 command_check optional 'Claude Code' claude
 command_check optional RTK rtk
@@ -191,32 +192,18 @@ if command -v lightpanda >/dev/null && timeout 30 env LIGHTPANDA_DISABLE_TELEMET
 else
     warn Lightpanda 'not installed or version command failed'
 fi
-if [[ -n $lm_host ]]; then
-    if [[ ! $lm_host =~ ^https?://[A-Za-z0-9.:-]+$ ]]; then
-        bad 'Mac LM Studio API' 'Use http://HOST:PORT or https://HOST:PORT without credentials/path'
+if [[ -n $inference_host ]]; then
+    if [[ ! $inference_host =~ ^https?://[A-Za-z0-9.:-]+$ ]]; then
+        bad "$inference_label" 'Use http://HOST:PORT or https://HOST:PORT without credentials/path'
     else
-        lm_status=$(curl --noproxy '*' --silent --output /dev/null --write-out '%{http_code}' --connect-timeout 5 --max-time 10 "$lm_host/v1/models") || lm_status=000
-        case $lm_status in
-            200) ok 'Mac LM Studio API' 'model-list endpoint reachable; host inference still needs a live request' ;;
-            401|403) ok 'Mac LM Studio API' 'server reachable and authentication required; provide token only to your chosen client' ;;
-            *) bad 'Mac LM Studio API' "HTTP $lm_status; check Mac server, host address, firewall and authentication" ;;
+        inference_status=$(curl --noproxy '*' --silent --output /dev/null --write-out '%{http_code}' --connect-timeout 5 --max-time 10 "$inference_host/v1/models") || inference_status=000
+        case $inference_status in
+            200) ok "$inference_label" 'model-list endpoint reachable; host inference still needs a live request' ;;
+            401|403) ok "$inference_label" 'server reachable and authentication required; provide token only to your chosen client' ;;
+            *) bad "$inference_label" "HTTP $inference_status; check Mac server, host address, firewall and authentication" ;;
         esac
     fi
-else manual 'Mac LM Studio API' 'Use ./verify.sh --lm-host http://HOST_IP:1234 after enabling the server on macOS'; fi
-manual 'Guest LM Studio runtime' 'Not required for macOS host inference via HTTP API.'
-# Legacy LM Link status remains available for users who already installed lms.
-command_check optional lms lms
-# llmster is normally managed under ~/.lmstudio, not exposed as a PATH command.
-if command -v llmster >/dev/null; then ok llmster 'executable found; daemon not started';
-elif [[ -d $HOME/.lmstudio/llmster ]] && [[ -n $(find "$HOME/.lmstudio/llmster" -type f -name llmster -perm -u+x -print -quit) ]]; then
-    ok llmster 'managed executable found; daemon not started'
-else manual llmster 'Not required for the macOS LM Studio HTTP API; see docs/compatibility.md'; fi
-if (( link )); then
-    if command -v lms >/dev/null; then
-        printf 'Read-only LM Link status (may include peer/device names; not saved):\n'
-        if timeout 30 lms link status; then manual 'LM Link' 'Status command succeeded. Confirm macOS peer is connected and test host inference manually; exit zero alone is not pairing proof';
-        else bad 'LM Link' 'Status failed; pair/login manually or check daemon/VPN connectivity'; fi
-    else bad 'LM Link' 'lms not installed'; fi
-else manual 'LM Link' 'After pairing: ./verify.sh --lm-link; no model loading/download in verification'; fi
+else manual 'Mac Kapitsa API' 'Use ./verify.sh --kapitsa-host http://HOST_IP:8000 after starting Kapitsa on macOS'; fi
+manual 'Guest inference runtime' 'Not required for macOS host inference via HTTP API.'
 printf '\nRequired/operational failures: %s. Manual and optional gaps are shown separately.\n' "$failures"
 (( failures == 0 ))
